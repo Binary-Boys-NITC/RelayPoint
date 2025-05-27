@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard UI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Inter:ital,opsz@0,14..32;1,14..32&display=swap"
+    rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz@0,14..32;1,14..32&family=Jomhuria&display=swap"
+    rel="stylesheet">
+
+
+
+</head>
+
+<body>
+
+  <header>
+    <div class="d-inline-flex align-items-center">
+      <a href='/'>
+        <div class="" id="logo">
+          <img src="../static/images/logo.png" alt="">
+        </div>
+      </a>
+      <nav class="inria-sans-regular mx-5">
+        <a href="/events">Events</a>
+        <a href="/leaderboard">Leaderboard</a>
+        <a href="/community">Community</a>
+        <a href="/workshops">Workshops</a>
+        <a href="/about">About Us</a>
+        <a href="/create_event">Create Event</a>
+      </nav>
+    </div>
+    <a href="{{profile_link}}">
+      <div class="m-3 d-inline-flex align-items-center" id="profile" >
+        <div class="inria-sans-regular mx-3">{{username}}</div>
+        <img src="https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small/user-profile-icon-free-vector.jpg" alt="">
+      </div>
+    </a>
+  </header>
+    
+  <main id="main-content" role="main" tabindex="-1">
+    <section class="profile-section" aria-labelledby="profile-heading">
+        <h1 id="profile-heading" class="profile-title">MY PROFILE</h1>
+        <div class="profile-content">
+            <div class="profile-image">
+                <img src="https://static.vecteezy.com/system/resources/thumbnails/002/318/271/small/user-profile-icon-free-vector.jpg" alt="User profile picture" class="profile-avatar" width="227" height="220">
+            </div>
+            <div class="profile-details">
+                <dl class="detail-list">
+                    <div class="detail-item">
+                        <dt class="label">Name:</dt>
+                        <dd class="value">{{username}}</dd>
+                    </div>
+                    <div class="detail-item">
+                        <dt class="label">Workshops attended:</dt>
+                        <dd class="value">{{workshop_count}}</dd>
+                    </div>
+                    <div class="detail-item">
+                        <dt class="label">Activity Points:</dt>
+                        <dd class="value">{{points}}</dd>
+                    </div>
+                    <div class="detail-item">
+                        <dt class="label">Global Rank:</dt>
+                        <dd class="value">{{rank}}</dd>
+                    </div>
+                </dl>
+                <div class="d-flex flex-row gap-5">
+                  <a href='/myevents'>
+                    <div class="my-events-section jomhuria-regular">
+                        <h2>My Events</h2>
+                    </div>
+                  </a>
+                  <a href='/logout'>
+                    <div class="my-events-section jomhuria-regular">
+                        <h2>Logout</h2>
+                    </div>
+                  </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="workshops-section" aria-labelledby="workshops-heading">
+        <h2 id="workshops-heading" class="section-title">Recent Workshops</h2>
+        <div class="workshop-grid" role="list">
+            {% for event in recent_events[:5] %}
+            <article class="workshop-card" role="listitem">
+                <img src="{{event[5]}}" alt="" class="workshop-image" width="400" height="179">
+                <div class="workshop-details">
+                    <h3>{{event[1]}}</h3>
+                    <p>{{event[2][:250]+"..."}}</p>
+                    <a href='/event/{{event[0]}}'>
+                    <button class="workshop-details-btn" aria-label="View event details">View Details</button>
+                    </a>
+                  </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="footer-content align-items-center">
+      <div class="footer-brand ">
+        <img style="width: 60px;height:60px;"
+          src="../static/images/logo.png"
+          alt="Relay Point Footer Logo" class="footer-logo" width="70" height="70">
+        <span class="footer-brand-name jomhuria-regular">RELAY POINT</span>
+      </div>
+      <div class="footer-contact">
+        <h2 class="contact-heading">CONTACT US</h2>
+        <a href="mailto:support@relaypoint.com" class="contact-email">support@relaypoint.com</a>
+      </div>
+    </div>
+  </footer>
+  <style>
+    .inria-sans-light {
+      font-family: "Inria Sans", serif;
+      font-weight: 300;
+      font-style: normal;
+    }
+    
+    .inria-sans-regular {
+      font-family: "Inria Sans", serif;
+      font-weight: 400;
+      font-style: normal;
+    }
+    
+    .inria-sans-bold {
+      font-family: "Inria Sans", serif;
+      font-weight: 700;
+      font-style: normal;
+    }
+    
+    .inria-sans-light-italic {
+      font-family: "Inria Sans", serif;
+      font-weight: 300;
+      font-style: italic;
+    }
+    
+    .inria-sans-regular-italic {
+      font-family: "Inria Sans", serif;
+      font-weight: 400;
+      font-style: italic;
+    }
+    
+    .inria-sans-bold-italic {
+      font-family: "Inria Sans", serif;
+      font-weight: 700;
+      font-style: italic;
+    }
+    .jomhuria-regular {
+      font-family: "Jomhuria", serif;
+      font-weight: 400;
+      font-style: normal;
+    }
+    
+    
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #2C3333;
+      color: white;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #2C3333;
+    }
+    
+    header nav a {
+      color: white;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+    
+    header nav a:hover {
+    }
+    
+    footer {
+      width:100% !important;
+      background-color: #212529;
+      text-align: center;
+      padding: 10px;
+      position: relative;
+    }
+    
+    footer a {
+      color: #17a2b8;
+      text-decoration: none;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
+    header {
+      font-size: 20px;
+      margin-bottom: -50px;
+    }
+    
+    #logo {
+      height: 60px;
+      width: 60px;
+    }
+    
+    #profile {
+      height: 50px;
+    }
+    #profile img {
+      height: 100%;
+      border-radius: 50%;
+    }
+    
+    
+    .my-activity {
+      background-color: #E7F6F214;
+    }
+    .footer {
+      background-color: #365a64; /* Matches the background color in the image */
+      color: white;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+    
+    .footer-brand {
+      display: flex;
+      align-items: center;
+    }
+    
+    .footer-logo {
+      border-radius: 50%; /* To make the logo circular */
+      margin-right: 10px;
+    }
+    
+    .footer-brand-name {
+      font-size: 3rem;
+      font-weight: bold;
+    }
+    
+    .footer-contact {
+      text-align: left;
+    }
+    
+    .contact-heading {
+      font-size: 1.2rem;
+      margin: 0;
+    }
+    
+    .contact-email {
+      color: white;
+      text-decoration: none;
+      font-size: 1rem;
+    }
+    
+    .contact-email:hover {
+      text-decoration: underline;
+    }
+    
+    a {
+      color:white;
+    }
+    a:hover {
+      color: #A5C9CA;
+    }
+    :root {
+      --primary-bg: rgba(44, 51, 51, 1);
+      --secondary-bg: rgba(57, 91, 100, 1);
+      --text-color: rgba(255, 255, 255, 1);
+      --card-bg: rgba(217, 217, 217, 1);
+      --focus-outline: 3px solid #4A90E2;
+      --transition-speed: 0.3s;
+  }
+  .user-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-name {
+    font-size: 1.5rem;
+}
+
+.user-avatar {
+    width: 78px;
+    height: 71px;
+    background-color: var(--text-color);
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    transition: transform var(--transition-speed);
+}
+
+.user-avatar:hover,
+.user-avatar:focus {
+    transform: scale(1.05);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-outline);
+}
+
+.profile-section {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    transform:scale(0.5);
+    margin-left:-250px;
+    margin-top:-100px;
+    margin-bottom:-150px;
+}
+
+.profile-title {
+    font-family: 'Jomhuria', serif;
+    font-size: 8rem;
+    line-height: 1;
+    margin-bottom: 2rem;
+}
+
+.profile-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 4rem;
+    align-items: start;
+}
+
+.profile-avatar {
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.label {
+    font-family: 'Jomhuria', serif;
+    font-size: 4rem;
+    line-height: 1;
+}
+
+.value {
+    font-family: 'Inder', sans-serif;
+    font-size: 2rem;
+}
+
+.my-events-section {
+    background-color: var(--secondary-bg);
+    padding: 1rem 2rem;
+    border-radius: 20px;
+    margin-top: 2rem;
+    max-width:400px;
+}
+
+.my-events-section h2 {
+    font-size: 5rem;
+}
+
+.workshops-section {
+    max-width: 1440px;
+    margin: 4rem auto;
+    padding: 0 1rem;
+}
+
+.section-title {
+    font-family: 'Jomhuria', serif;
+    font-size: 6rem;
+    line-height: 1;
+    margin-bottom: 2rem;
+}
+
+.workshop-grid {
+    display: flex;
+    gap: 2rem;
+}
+
+.workshop-card {
+  flex:1;
+    background-color: var(--card-bg);
+    max-width:300px;
+    border-radius: 22px;
+    overflow: hidden;
+    transition: transform var(--transition-speed);
+}
+
+.workshop-card:hover,
+.workshop-card:focus-within {
+    transform: translateY(-4px);
+}
+
+.workshop-image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2.23;
+    object-fit: cover;
+}
+
+.workshop-details {
+    padding: 1.5rem;
+    color: #000;
+}
+
+.workshop-details h3 {
+    font-family: 'Jomhuria', serif;
+    font-size: 4rem;
+    line-height: 1;
+    margin-bottom: 1rem;
+}
+
+.workshop-details p {
+    font-family: 'Inder', sans-serif;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.workshop-details-btn {
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+}
+
+.workshop-details-btn:hover,
+.workshop-details-btn:focus {
+    background-color: var(--primary-bg);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-outline);
+}
+a {
+  text-decoration:none;
+}
+  </style>
+</body>
+
+</html>

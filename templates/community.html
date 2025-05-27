@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard UI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Inter:ital,opsz@0,14..32;1,14..32&display=swap"
+    rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz@0,14..32;1,14..32&family=Jomhuria&display=swap"
+    rel="stylesheet">
+
+
+
+</head>
+
+<body>
+
+  <header>
+    <div class="d-inline-flex align-items-center">
+      <a href='/'>
+        <div class="" id="logo">
+          <img src="../static/images/logo.png" alt="">
+        </div>
+      </a>
+      <nav class="inria-sans-regular mx-5">
+        <a href="/events">Events</a>
+        <a href="/leaderboard">Leaderboard</a>
+        <a href="/community">Community</a>
+        <a href="/workshops">Workshops</a>
+        <a href="/about">About Us</a>
+        <a href="/create_event">Create Event</a>
+      </nav>
+    </div>
+    <a href="{{profile_link}}">
+      <div class="m-3 d-inline-flex align-items-center" id="profile" >
+        <div class="inria-sans-regular mx-3">{{username}}</div>
+        <img src="data:image/png;base64,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" alt="">
+      </div>
+    </a>
+  </header>
+    
+  <main role="main">
+    <h1 class="main-title">COMMUNITY</h1>
+
+
+    <section class="message-section" aria-label="Message input">
+        <form action="/api/post_blog" method="POST">
+        <input type="text" name="username" value="{{username}}" style="display:none;"/>
+          <div class="message-box">
+              <div class="user-message">
+                <img class="avatar" role="img" aria-label="{{username}} avatar" src="data:image/png;base64,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" alt="">
+                <span>{{username}}</span>
+              </div>
+              <textarea aria-label="Write a message" name="blog" placeholder="Write a message"></textarea>
+              <button type="submit" class="post-button">Post</button>
+          </div>
+      </form>
+    </section>
+
+    <section class="posts-section" aria-label="Community posts">
+        <h2>Posts</h2>
+        {% for blog in blogs %}
+        <article class="post">
+            <div class="post-header">
+                <img class="avatar" role="img" aria-label="{{username}} avatar" src="data:image/png;base64,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" alt="">
+                <h3>{{blog[1]}}</h3>
+            </div>
+            <p>{{blog[2]}}</p>
+        </article>
+        {% endfor %}
+    </section>
+</main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="footer-content align-items-center">
+      <div class="footer-brand ">
+        <img style="width: 60px;height:60px;"
+          src="../static/images/logo.png"
+          alt="Relay Point Footer Logo" class="footer-logo" width="70" height="70">
+        <span class="footer-brand-name jomhuria-regular">RELAY POINT</span>
+      </div>
+      <div class="footer-contact">
+        <h2 class="contact-heading">CONTACT US</h2>
+        <a href="mailto:support@relaypoint.com" class="contact-email">support@relaypoint.com</a>
+      </div>
+    </div>
+  </footer>
+  <style>
+    .inria-sans-light {
+      font-family: "Inria Sans", serif;
+      font-weight: 300;
+      font-style: normal;
+    }
+    
+    .inria-sans-regular {
+      font-family: "Inria Sans", serif;
+      font-weight: 400;
+      font-style: normal;
+    }
+    
+    .inria-sans-bold {
+      font-family: "Inria Sans", serif;
+      font-weight: 700;
+      font-style: normal;
+    }
+    
+    .inria-sans-light-italic {
+      font-family: "Inria Sans", serif;
+      font-weight: 300;
+      font-style: italic;
+    }
+    
+    .inria-sans-regular-italic {
+      font-family: "Inria Sans", serif;
+      font-weight: 400;
+      font-style: italic;
+    }
+    
+    .inria-sans-bold-italic {
+      font-family: "Inria Sans", serif;
+      font-weight: 700;
+      font-style: italic;
+    }
+    .jomhuria-regular {
+      font-family: "Jomhuria", serif;
+      font-weight: 400;
+      font-style: normal;
+    }
+    
+    
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #2C3333;
+      color: white;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #2C3333;
+    }
+    
+    header nav a {
+      color: white;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+    
+    header nav a:hover {
+      text-decoration: underline;
+    }
+    
+    footer {
+      width:100% !important;
+      background-color: #212529;
+      text-align: center;
+      padding: 10px;
+      position: relative;
+    }
+    
+    footer a {
+      color: #17a2b8;
+      text-decoration: none;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
+    header {
+      font-size: 20px;
+      margin-bottom: -50px;
+    }
+    
+    #logo {
+      height: 60px;
+      width: 60px;
+    }
+    
+    #profile {
+      height: 50px;
+    }
+    #profile img {
+      height: 100%;
+      border-radius: 50%;
+    }
+    
+    
+    .my-activity {
+      background-color: #E7F6F214;
+    }
+    .footer {
+      background-color: #365a64; /* Matches the background color in the image */
+      color: white;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+    
+    .footer-brand {
+      display: flex;
+      align-items: center;
+    }
+    
+    .footer-logo {
+      border-radius: 50%; /* To make the logo circular */
+      margin-right: 10px;
+    }
+    
+    .footer-brand-name {
+      font-size: 3rem;
+      font-weight: bold;
+    }
+    
+    .footer-contact {
+      text-align: left;
+    }
+    
+    .contact-heading {
+      font-size: 1.2rem;
+      margin: 0;
+    }
+    
+    .contact-email {
+      color: white;
+      text-decoration: none;
+      font-size: 1rem;
+    }
+    
+    .contact-email:hover {
+      text-decoration: underline;
+    }
+    
+    a {
+      color:white;
+    }
+    a:hover {
+      color: #A5C9CA;
+    }
+    :root {
+      --primary-bg: rgba(44, 51, 51, 1);
+      --secondary-bg: rgba(57, 91, 100, 1);
+      --text-color: rgba(255, 255, 255, 1);
+      --avatar-bg: rgba(217, 217, 217, 1);
+  }
+  main {
+    transform:scale(0.7);
+    margin-top:-200px;
+  }
+  .main-title {
+    font-family: 'Jomhuria', serif;
+    font-size: 150px;
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.secondary-nav ul {
+    display: flex;
+    list-style: none;
+    gap: 3.5rem;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+.secondary-nav a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 1.5rem;
+    transition: opacity 0.2s;
+}
+
+.user-section {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 2rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar {
+    width: 78px;
+    height: 71px;
+    background-color: var(--text-color);
+    border-radius: 50%;
+}
+
+.message-section {
+    max-width: 1800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.message-box {
+    background-color: var(--secondary-bg);
+    border-radius: 20px;
+    padding: 1.5rem;
+}
+
+.user-message {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.avatar {
+    width: 73px;
+    height: 73px;
+    background-color: var(--avatar-bg);
+    border-radius: 50%;
+}
+
+textarea {
+    width: 100%;
+    min-height: 100px;
+    background-color: transparent;
+    border: 3px solid var(--text-color);
+    border-radius: 10px;
+    color: var(--text-color);
+    padding: 1rem;
+    margin: 1rem 0;
+    resize: vertical;
+}
+
+.post-button {
+    display: block;
+    margin-left: auto;
+    padding: 0.5rem 2rem;
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    transform: scale(1.2);
+}
+
+.post-button:hover,
+.post-button:focus {
+    transform: scale(1.05);
+}
+
+.posts-section {
+    max-width: 1800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    position: relative;
+}
+
+
+.posts-section h2 {
+    font-family: 'Jomhuria', serif;
+    font-size: 6rem;
+    margin-bottom: 2rem;
+}
+
+.post {
+    margin-bottom: 4rem;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+  </style>
+</body>
+
+</html>
