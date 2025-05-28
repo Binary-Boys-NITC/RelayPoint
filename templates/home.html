@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="home-style.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+<body>
+    <header>
+        <div class="navbar">
+            <img class="logo "src="../static/images/logo.png"/>
+            <a class="about-us nav">About Us</a>
+            <a class="leaderboard nav">Leaderboard</a>
+            <a class="my-events nav">My Events</a>
+            <a class="community nav">Community</a>
+            <div>
+                <a class="login nav">Login</a>
+                <a class="signup nav">Signup</a>
+            </div>
+        </div>
+    </header>
+    <div class="slideshow-container">
+            <div class="carousel">
+                <div class="slides">
+                    <div class="slide active"><img src="./img1.jpg" alt="Slide 1"></div>
+                    <div class="slide"><img src="./img2.jpg" alt="Slide 2"></div>
+                    <div class="slide"><img src="./img3.jpg" alt="Slide 3"></div>
+                </div>
+                <button class="prev">&#10094;</button>
+                <button class="next">&#10095;</button>
+            </div>
+        </div>
+        <div class="search-bar">
+            <div>
+                <span class="search-title">Event type:</span>
+                <input class="input-box" type="text">
+            </div>
+            <div>
+                <span class="search-title">Date:</span>
+                <input class="input-box" type="text">
+            </div>
+            <img src="../static/images/search-icon-2048x2048-cmujl7en.png"/>
+        </div>
+    <div class="upcoming-container">
+        <h3><span class="upcoming-text">Upcoming</span> Events</h3>
+        <select class="event-type">
+            <option value="workshops">Workshops</option>
+            <option value="lectures">Lectures</option>
+            <option value="games">Games</option>
+            <option value="hackathon">Hackathon</option>
+        </select>
+    </div>
+    <script src="./home.js"></script>
+</body>
+</html>
