@@ -103,7 +103,7 @@ def pgLogin(username:str,password:str):
     user = session.query(User).filter(User.username == username).first()
     if user is not None:
         if user.hashed_password == hasher(password):
-            secret_key = hasher("BinaryBoys"+str(random.randint(1,100000000)))
+            secret_key = hasher(hash_key+str(random.randint(1,100000000)))
             user.secret_key = secret_key
             session.commit()
             return {"status_code":200, "message":"Ok", "secret_key":secret_key}
@@ -282,6 +282,12 @@ def pgGetEvent(id:int):
     event = session.query(Event).filter(Event.id == id).first()
     return event
 
+def pgUploadImage(data,mime_type):
+    image = Image(data=data,mime_type=mime_type)
+    session.add(image)
+    session.commit()
+    return image.id
+
 def pgGetImage(id:int):
     image = session.query(Image).filter(Image.id == id).first()
     return binary_to_base64(image.data,image.mime_type)
@@ -308,3 +314,21 @@ def pgPostBlog(username,secret_key,blog,time):
 def pgGetBlogs():
     posts=session.query(Post).all()
     return posts[::-1]
+
+def resetdb():
+    """
+    Drops all tables and recreates them from the defined SQLAlchemy models.
+    WARNING: This will erase all existing data!
+    """
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+    print("Database has been reset.")
+
+if __name__ == "__main__":
+    resetdb()
+    event=Event(title="Test Event",description="Test Description",category="Test Category",date=datetime.datetime.now() + datetime.timedelta(days=5),image_ids=[1],organizers=["admin"],access=["all"],registered_users=[])
+    image=Image(data=b"Test Image",mime_type="image/png")
+    session.add(image)
+    session.add(event)
+    session.commit()
+    pgCreateUser("admin","admin",["admin"])

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template,redirect,make_response
+from flask import Flask, request, jsonify, render_template,redirect,make_response, send_file
 import base64
 from datetime import datetime
 import qrcode
@@ -42,100 +42,61 @@ def upload_image():
     uploaded_file = request.files['image']
     binary_data=uploaded_file.read()
     mimetype = uploaded_file.mimetype
-    pg.cursor.execute("INSERT INTO images(data,mimetype) VALUES(%s,%s) RETURNING id",(binary_data,mimetype))
-    pg.conn.commit()
-    return {"status_code":200,"message":"Ok","id":pg.cursor.fetchone()[0]}
+    image = pg.Image(data=binary_data, mime_type=mimetype)
+    pg.session.add(image)
+    pg.session.commit()
+    image_id = image.id
+    return {"status_code":200,"message":"Ok","id":image_id}
     
+@app.route('/image/<int:id>',methods=["GET"])
+def image(id):
+    image=pg.session.query(pg.Image).filter(pg.Image.id==id).first()
+    return send_file(BytesIO(image.data),mimetype=image.mime_type)
+
 @app.route('/',methods=['GET'])
 def index():
     username=request.cookies.get("username")
     secret_key=request.cookies.get("secret_key")
-    pg.cursor.execute("SELECT * FROM events ORDER BY date DESC;")
-    latest=pg.cursor.fetchall()[0]
-    if len(latest[5])==0:
-        latest=list(latest)
-        latest[5]="https://cdn.builder.io/api/v1/image/assets/TEMP/9d3041a297c47abe0747b9f55a58146e9ae55c83be378abf990f357e4b053464?placeholderIfAbsent=true&apiKey=2cbf1f5487444b28a9e58914868be763"
-        latest=tuple(latest)
-    else:
-        latest=list(latest)
-        latest[5]=pg.pgGetImage(latest[5][0])
-        latest=tuple(latest)
-        current_datetime = datetime.now()
-        formatted_datetime = str(current_datetime.strftime("%Y-%m-%d %H:%M:%S"))
+    latest=pg.session.query(pg.Event).order_by(pg.Event.date.desc()).first()
 
-    upcoming_events=[]
-    pg.cursor.execute("SELECT * FROM events ORDER BY date DESC;")
-    
-    for event in pg.cursor.fetchall():
-        if str(event[4])>=formatted_datetime:
-            upcoming_events.append(event)
-        else:
-            break
-    
-    #get images
-    for i in range(len(upcoming_events)):
-        if (len(upcoming_events[i][5])==0):
-            upcoming_events[i]=list(upcoming_events[i])
-            upcoming_events[i][5]="https://cdn.builder.io/api/v1/image/assets/TEMP/9d3041a297c47abe0747b9f55a58146e9ae55c83be378abf990f357e4b053464?placeholderIfAbsent=true&apiKey=2cbf1f5487444b28a9e58914868be763"
-            upcoming_events[i]=tuple(upcoming_events[i])
-        else:
-            upcoming_events[i]=list(upcoming_events[i])
-            upcoming_events[i][5]=pg.pgGetImage(upcoming_events[i][5][0])
-            upcoming_events[i]=tuple(upcoming_events[i])    
+    current_datetime = datetime.now()
+
+    upcoming_events=pg.session.query(pg.Event).filter(pg.Event.date>=current_datetime).all() 
+    upcoming_events=sorted(upcoming_events,key=lambda i:i.date)
     
     if request.cookies.get("secret_key"):
-        pg.cursor.execute("SELECT * FROM user_stats WHERE username=%s;",(username,))
-        user=pg.cursor.fetchone()
-        points=0
-        if user[3]!=None:
-            for i in user[3]:
-                points+=i["points"]
-        
-                
-        registered_events=[]
-        if secret_key!=None:
+        user=pg.session.query(pg.User).filter(pg.User.username==username).first()
+        if user.secret_key == secret_key:
+            user_stats=pg.session.query(pg.UserStats).filter(pg.UserStats.username==username).first()
+            points=user_stats.points
+            
+            registered_events=[]
             for event_id in pg.pgGetRecentEvents(username,secret_key):
                 event = pg.pgGetEvent(event_id)
-                if str(event[4])>formatted_datetime:
+                if str(event.date)>current_datetime:
                     registered_events.append(event)
-        #get images
-        for i in range(len(registered_events)):
-            if (len(registered_events[i][5])==0):
-                registered_events[i]=list(registered_events[i])
-                registered_events[i][5]="https://cdn.builder.io/api/v1/image/assets/TEMP/9d3041a297c47abe0747b9f55a58146e9ae55c83be378abf990f357e4b053464?placeholderIfAbsent=true&apiKey=2cbf1f5487444b28a9e58914868be763"
-                registered_events[i]=tuple(registered_events[i])
-            else:
-                registered_events[i]=list(registered_events[i])
-                registered_events[i][5]=pg.pgGetImage(registered_events[i][5][0])
-                registered_events[i]=tuple(registered_events[i])
-        
-        for i in range(len(registered_events)):
-            date = registered_events[i][4]
-            time_difference=date-datetime.now()
-            registered_events[i]=list(registered_events[i])
-            registered_events[i][4]=time_difference.days
-            registered_events[i]=tuple(registered_events[i])
-        
-        
-        if user[1]==None:
-            user=list(user)
-            user[1]=[]
-        return render_template('index.html',
-                               username=request.cookies.get("username"),
-                               profile_link='/myprofile',
-                               points=points,
-                               rank=pg.pgGetRank(username),
-                               attended_events=len(user[1]),
-                               upcoming_events=upcoming_events,
-                               registered_events=registered_events,
-                               latest=latest
-                               )
-    else:
-        return render_template('index.html',
-                               username="Guest User",
-                               profile_link='/login',
-                               latest=latest,
-                               upcoming_events=upcoming_events)
+            
+            for event in registered_events:
+                time_difference = event.date - datetime.now()
+                event.time_difference = time_difference.days  # This does NOT persist in DB
+            
+
+            return render_template('index.html',
+                                    username=request.cookies.get("username"),
+                                    profile_link='/myprofile',
+                                    points=points,
+                                    rank=pg.pgGetRank(username),
+                                    attended_events=len(user_stats.events_ids),
+                                    upcoming_events=upcoming_events,
+                                    registered_events=registered_events,
+                                    latest=latest
+                                    )
+    
+    return render_template('index.html',
+                            username="Guest User",
+                            profile_link='/login',
+                            latest=latest,
+                            upcoming_events=upcoming_events)
 
 @app.route('/login',methods=["GET"])
 def login():
@@ -192,9 +153,7 @@ def createEvent():
 def apiCreateEvent():
     binary_data=request.files['image'].read()
     mimetype=request.files['image'].mimetype
-    pg.cursor.execute("INSERT INTO images(data,mimetype) VALUES(%s,%s) RETURNING id",(binary_data,mimetype))
-    pg.conn.commit()
-    image_id=pg.cursor.fetchone()[0]
+    image_id=pg.pgUploadImage(binary_data,mimetype)
     if pg.pgAuthorizeCreateEvent(request.cookies.get('username'),request.cookies.get('secret_key')):
         date={
             "year":int(request.form['year']),

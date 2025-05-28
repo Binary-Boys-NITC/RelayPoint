@@ -1,8 +1,8 @@
 SQL TABLES:
 
-Users - roles:
+Users:
 	username | hashed_password | roles [admin/organizer,cse-student,fosscell-member] | secret_key
-Users - stats:
+Userstats:
 	username | events_ids | created_events_ids | points {"event_id":eventId,"points":points}
 Events:
 	id | title | description | category | date | image_ids | organizers | access | registered_users

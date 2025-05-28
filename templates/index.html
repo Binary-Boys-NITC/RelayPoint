@@ -51,8 +51,8 @@
   <div class="main-container">
     <div class="what-new">
       <h1 class="jomhuria-regular">WHAT'S NEW</h1>
-      <a href="/event/{{latest[0]}}">
-        <img src="{{latest[5]}}"
+      <a href="/event/{{latest.id}}">
+        <img src="/image/{{latest.image_ids[0] if latest.image_ids else 0}}"
           alt="Workshop image">
       </a>
     </div>
@@ -60,12 +60,12 @@
     <div class="upcoming-events d-flex flex-column">
       <h2 class="jomhuria-regular">UPCOMING EVENTS</h2>
       {% for event in upcoming_events %}
-      <a href="/event/{{event[0]}}">
+      <a href="/event/{{event.id}}">
         <div class="event d-inline-flex align-items-center">
-          <img src="{{event[5]}}" style="border:2px solid #A5C9CA">
+          <img src="/image/{{event.image_ids[0] if event.image_ids else 0}}" style="border:2px solid #A5C9CA">
           <div class="ms-3 ">
-            <h3 class="jomhuria-regular">{{event[1]}}</h3>
-            <p>{{event[2][:250]+"..."}}</p>
+            <h3 class="jomhuria-regular">{{event.title}}</h3>
+            <p>{{event.description[:250]+"..."}}</p>
           </div>
         </div>
       </a>
@@ -112,14 +112,14 @@
         {% if (registered_events|length)!=0 %}
       <div class="events-container">
         {% for event in registered_events %}
-        <a href='/event/{{event[0]}}'>
+        <a href='/event/{{event.id}}'>
           <div class="event-card">
             <div class="event-thumbnail">
-              <img src="{{event[5]}}" style="object-fit:cover; width:100%;height:100%;border-radius:10px;border:2px solid #A5C9CA;">
+              <img src="/image/{{event.image_ids[0] if event.image_ids else 0}}" style="object-fit:cover; width:100%;height:100%;border-radius:10px;border:2px solid #A5C9CA;">
             </div>
-            <p class="event-name">{{event[1]}}</p>
+            <p class="event-name">{{event.title}}</p>
             <div class="event-countdown d-flex flex-row align-items-center">
-              <div class="countdown-days me-2">{{event[4]}}</div>
+              <div class="countdown-days me-2">{{event.time_difference}}</div>
               <div class="d-flex flex-column">
                 <div>
                   DAYS
