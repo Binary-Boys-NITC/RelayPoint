@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events</title>
+    <link rel="stylesheet" href="events-style.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+<body>
+    <header>
+        <div class="navbar">
+            <img class="logo "src="../static/images/logo.png"/>
+            <a class="about-us nav">About Us</a>
+            <a class="leaderboard nav">Leaderboard</a>
+            <a class="my-events nav">My Events</a>
+            <a class="community nav">Community</a>
+            <div class="logsign">
+                <div class="login">
+                    <a>Login</a>
+                </div>
+                <div class="signup">
+                    <a>Signup</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <h1>Events</h1>
+    <div class="slideshow-container">
+            <div class="carousel">
+                <div class="slides">
+                    <div class="slide active"><img src="../static/images/img1.jpg" alt="Slide 1"></div>
+                    <div class="slide"><img src="../static/images/img2.jpg" alt="Slide 2"></div>
+                    <div class="slide"><img src="../static/images/img3.jpg" alt="Slide 3"></div>
+                </div>
+                <button class="prev">&#10094;</button>
+                <button class="next">&#10095;</button>
+            </div>
+        </div>
+        <div class="search-bar">
+            <div>
+                <span class="search-title">Event type:</span>
+                <input class="input-box" type="text">
+            </div>
+            <div>
+                <span class="search-title">Date:</span>
+                <input class="input-box" type="text">
+            </div>
+            <img src="../static/images/search-icon-2048x2048-cmujl7en.png"/>
+        </div>
+    <div class="upcoming-container">
+        <h3><span class="upcoming-text">Upcoming</span> Events</h3>
+        <select class="event-type">
+            <option value="workshops">Workshops</option>
+            <option value="lectures">Lectures</option>
+            <option value="games">Games</option>
+            <option value="hackathon">Hackathon</option>
+        </select>
+        <select class="date">
+            <option value="sunday">Sunday</option>
+            <option value="monday">Monday</option>
+            <option value="tuesday">Tuesday</option>
+            <option value="wednesday">Wednesday</option>
+            <option value="thursday">Thursday</option>                <option value="friday">Friday</option>
+            <option value="saturday">Saturday</option>
+        </select>
+    </div>
+    <div class="upcoming-grid">
+        <div class="card">
+            <img src="../static/images/img1.jpg"/>
+            <h4>Event Name</h4>
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam lobortis, tortor ut malesuada lacinia, sapien arcu congue velit, at eleifend felis erat in metus. Vivamus vel justo ex. Quisque dui nibh, tincidunt
+            </p>
+        </div>
+        <div class="card">
+            <img src="../static/images/img1.jpg"/>
+            <h4>Event Name</h4>
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam lobortis, tortor ut malesuada lacinia, sapien arcu congue velit, at eleifend felis erat in metus. Vivamus vel justo ex. Quisque dui nibh, tincidunt
+            </p>
+        </div>
+        <div class="card">
+            <img src="../static/images/img1.jpg"/>
+            <h4>Event Name</h4>
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam lobortis, tortor ut malesuada lacinia, sapien arcu congue velit, at eleifend felis erat in metus. Vivamus vel justo ex. Quisque dui nibh, tincidunt
+            </p>
+        </div>
+        <div class="card">
+            <img src="../static/images/img1.jpg"/>
+            <h4>Event Name</h4>
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam lobortis, tortor ut malesuada lacinia, sapien arcu congue velit, at eleifend felis erat in metus. Vivamus vel justo ex. Quisque dui nibh, tincidunt
+            </p>
+        </div>
+    </div>
+    <div class="load-more">
+        <span>Load more</span>
+    </div>
+    <footer>
+        <h5>RelayPoint</h5>
+        <span >contact us: support@relaypoint.com</span>
+        <span class="rights">© All Rights Reserved</span>
+    </footer>
+    <script src="./events.js"></script>
+</body>
+</html>

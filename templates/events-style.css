@@ -5,10 +5,13 @@
     font-size: 1.25rem;
     font-family: "Comfortaa", sans-serif;
 }
+.nav{
+  padding-top: 8px;
+}
 .logo{
     display: inline;
     margin:-15px;
-    height: 70px;
+    height: 60px;
 }
 .signup{
     background-color: #0d3b66;
@@ -16,6 +19,16 @@
     padding: 8px;
     margin-left: 10px;
     border-radius: 8px;
+}
+.logsign{
+  display: flex;
+  justify-content: space-around;
+}
+.signup:hover{
+  transform: scale(1.1);
+}
+.login:hover{
+  transform: scale(1.1);
 }
 .login{
     border: 1px solid #0d3b66;
@@ -74,6 +87,11 @@ button.next { right: 10px; }
 button:hover {
   background: rgba(0,0,0,0.6);
 }
+h1{
+  font-family: "Comfortaa", sans-serif;
+  font-size: 3rem;
+  margin-left: 5%;
+}
 .search-bar{
     background-color: #0d3b66;
     border-radius: 10px;
@@ -103,9 +121,83 @@ button:hover {
 .upcoming-container{
     font-family: "Comfortaa", sans-serif;
     font-size: 1.5rem;
-    display: flex;
-    justify-content: start;
+    display: grid;
+    grid-template-columns: 2fr 5fr 1fr 1fr;
+}
+.event-type{
+  border: 0px;
+  grid-column-start: 3;
+  text-align: center;
+}
+.date{
+  border: 0px;
+  grid-column-start: 4;
+  text-align: center;
 }
 .upcoming-text{
     color: #0d3b66;
+}
+
+.upcoming-grid{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  margin: 15px;
+  margin-top: 0px;
+}
+.card{
+  border: solid 1px #0d3b66;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 5px;
+  height: 350px;
+  width: 300px;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+.card img{
+  width: 100%;
+  height: 50%;
+  border-radius: 8px;
+}
+.card h4{
+  margin: 5px;
+  font-family: "Comfortaa", sans-serif;
+  font-size: 1.25rem;
+}
+.card p{
+  margin: 5px;
+  font-family: "Comfortaa", sans-serif;
+}
+.load-more{
+  display: flex;
+  justify-content: center;
+}
+.load-more span{
+  font-family: "Comfortaa", sans-serif;
+  background-color: #0d3b66;
+  border-radius: 8px;
+  color: white;
+  padding: 10px;
+  margin: 5px;
+  font-size: 1.25rem;
+}
+footer{
+  font-family: "Comfortaa", sans-serif;
+  color: white;
+  background-color: #0d3b66;
+  margin: -8px;
+  padding: 10px;
+  margin-top: 20px;
+}
+footer h5{
+  display: inline;
+  font-size: 1.5rem;
+}
+footer span{
+  text-align: left;
+  display: block;
+}
+.rights{
+  display: block;
+  text-align: center;
 }
