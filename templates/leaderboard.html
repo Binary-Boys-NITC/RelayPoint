@@ -86,10 +86,10 @@
                     <span class="rank-number">{{LB.index(guy)+1}}</span>
                     <div class="user-info">
                         <div class="user-avatar" role="img" aria-label="User avatar"></div>
-                        <span class="user-name">{{guy[0]}}</span>
+                        <span class="user-name">{{guy.username}}</span>
                     </div>
-                    <span class="points">{{guy[3]}}</span>
-                    <span class="workshops">{{(guy[1] or [])|length}}</span>
+                    <span class="points">{{guy.pointsTotal}}</span>
+                    <span class="workshops">{{guy.events_ids|length}}</span>
                 </div>
                 {% endfor %}
             </div>
@@ -277,7 +277,7 @@
       color: #A5C9CA;
     }
     main {
-      margin-top:-200px;
+      margin-top:-120px;
       transform:scale(0.7);
     }
     :root {

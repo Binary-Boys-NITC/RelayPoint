@@ -95,11 +95,11 @@
         <div class="workshop-grid" role="list">
             {% for event in recent_events[:5] %}
             <article class="workshop-card" role="listitem">
-                <img src="{{event[5]}}" alt="" class="workshop-image" width="400" height="179">
+                <img src="/image/{{event.image_ids[0]}}" alt="" class="workshop-image" width="400" height="179">
                 <div class="workshop-details">
-                    <h3>{{event[1]}}</h3>
-                    <p>{{event[2][:250]+"..."}}</p>
-                    <a href='/event/{{event[0]}}'>
+                    <h3>{{event.name}}</h3>
+                    <p>{{event.description[:250]+"..."}}</p>
+                    <a href='/event/{{event.id}}'>
                     <button class="workshop-details-btn" aria-label="View event details">View Details</button>
                     </a>
                   </div>

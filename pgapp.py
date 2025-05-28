@@ -4,7 +4,8 @@ import dotenv,os
 import random
 import base64
 import datetime
-
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.ext.mutable import MutableList
 def binary_to_base64(binary_data, mime_type):
     # Encode binary data to Base64
     base64_data = base64.b64encode(binary_data).decode('utf-8')
@@ -50,8 +51,8 @@ class User(Base):
 class UserStats(Base):
     __tablename__ = 'user_stats'
     username = Column(String, ForeignKey('users.username'), primary_key=True)
-    events_ids = Column(ARRAY(Integer), nullable=True)
-    created_events_ids = Column(ARRAY(Integer), nullable=True)
+    events_ids = Column(MutableList.as_mutable(ARRAY(Integer)))
+    created_events_ids =  Column(MutableList.as_mutable(ARRAY(Integer)))
     points = Column(JSON, nullable=True)
 
 class Event(Base):
@@ -61,10 +62,10 @@ class Event(Base):
     description = Column(String)
     category = Column(String)
     date = Column(DateTime)
-    image_ids = Column(ARRAY(Integer))
+    image_ids = Column(MutableList.as_mutable(ARRAY(Integer)))
     organizers = Column(ARRAY(String))
     access = Column(ARRAY(String))
-    registered_users = Column(ARRAY(String)) 
+    registered_users = Column(MutableList.as_mutable(ARRAY(String))) 
 
 class Image(Base):
     __tablename__ = 'images'
@@ -74,7 +75,8 @@ class Image(Base):
 
 class Post(Base):
     __tablename__ = 'posts'
-    username = Column(String, ForeignKey('users.username'), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String, ForeignKey('users.username'))
     blog = Column(String)
     date = Column(DateTime)
 
@@ -170,11 +172,12 @@ def pgCreateEvent(username,title,description,category,date,imageIds=[],organizer
     else:
         event = Event(title=title,description=description,category=category,date=date,image_ids=imageIds,organizers=organizers,access=access,registered_users=[])
         session.add(event)
+        session.commit()
         eventid = event.id
-        
         user_stats = session.query(UserStats).filter(UserStats.username == username).first()
         user_stats.created_events_ids.append(eventid)
         session.commit()
+        print(user_stats.created_events_ids)
         return {"status_code":200,"message":"Ok","data":{"id":eventid}}
     
 def pgRegisterEvent(username,secret_key,eventid):
@@ -267,6 +270,7 @@ def pgGetCreatedEvents(username,secret_key):
     if user is not None:
         if user.secret_key == secret_key:
             user_stats = session.query(UserStats).filter(UserStats.username == username).first()
+            
             events=user_stats.created_events_ids
             return events[::-1]
         else:

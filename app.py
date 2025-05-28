@@ -4,7 +4,7 @@ from datetime import datetime
 import qrcode
 from io import BytesIO
 import json
-
+from sqlalchemy import or_, func
 import pgapp as pg
 
 app = Flask(__name__)
@@ -68,12 +68,12 @@ def index():
         user=pg.session.query(pg.User).filter(pg.User.username==username).first()
         if user.secret_key == secret_key:
             user_stats=pg.session.query(pg.UserStats).filter(pg.UserStats.username==username).first()
-            points=user_stats.points
+            points=pg.pgGetPoints(username)
             
             registered_events=[]
             for event_id in pg.pgGetRecentEvents(username,secret_key):
                 event = pg.pgGetEvent(event_id)
-                if str(event.date)>current_datetime:
+                if event.date>current_datetime:
                     registered_events.append(event)
             
             for event in registered_events:
@@ -181,12 +181,7 @@ def myprofile():
     secret_key=request.cookies.get('secret_key')
     if username==None:
         return redirect('/login')
-    pg.cursor.execute("SELECT * FROM user_stats WHERE username=%s;",(username,))
-    user=pg.cursor.fetchone()
-    points=0
-    if user[3]!=None:
-        for i in user[3]:
-            points+=i["points"]
+    points=pg.pgGetPoints(username)
     recent_events_ids=pg.pgGetRecentEvents(username,secret_key)
     if recent_events_ids==False:
         return redirect('/login')
@@ -194,23 +189,11 @@ def myprofile():
     for id in recent_events_ids:
         recent_events.append(pg.pgGetEvent(id))
         
-    #get image
-    for i in range(len(recent_events)):
-        if (len(recent_events[i][5])==0):
-            recent_events[i]=list(recent_events[i])
-            recent_events[i][5]="https://cdn.builder.io/api/v1/image/assets/TEMP/9d3041a297c47abe0747b9f55a58146e9ae55c83be378abf990f357e4b053464?placeholderIfAbsent=true&apiKey=2cbf1f5487444b28a9e58914868be763"
-            recent_events[i]=tuple(recent_events[i])
-        else:
-            recent_events[i]=list(recent_events[i])
-            recent_events[i][5]=pg.pgGetImage(recent_events[i][5][0])
-            recent_events[i]=tuple(recent_events[i])
-    if user[1]==None:
-        user=list(user)
-        user[1]=[]
+    
     return render_template('/myprofile.html',
                            username=username,
-                           uprofile_rl='/myprofile',
-                           workshop_count=len(user[1]),
+                           profile_url='/myprofile',
+                           workshop_count=len(recent_events_ids),
                            points=points,rank=pg.pgGetRank(username),
                            recent_events=recent_events)
 @app.route('/leaderboard',methods=["GET"])
@@ -220,11 +203,10 @@ def leaderboard():
     if username==None:
         return redirect('/login')
     LB=pg.pgRanklist()
-    for i in range(len(LB)):
-        LB[i]=list(LB[i])
-        LB[i][3]=pg.pgGetPoints(LB[i][0])
+    for user in LB:
+        user.pointsTotal=pg.pgGetPoints(user.username)
     return render_template('/leaderboard.html',
-                           username=username,uprofile_rl='/myprofile',
+                           username=username,profile_url='/myprofile',
                            myrank=pg.pgGetRank(username),
                            mypoints=pg.pgGetPoints(username), 
                            myworkshops=len(pg.pgGetRecentEvents(username,secret_key)),
@@ -238,24 +220,19 @@ def events():
     username=request.cookies.get('username')
     if username==None:
         username="Guest User"
-    pg.cursor.execute("SELECT * FROM events;")
     current_datetime = datetime.now()
-    formatted_datetime = str(current_datetime.strftime("%Y-%m-%d %H:%M:%S"))
-    events=pg.cursor.fetchall()
-    upcoming_events=[]
-    for event in events:
-        if str(event[4])>formatted_datetime and category in event[3].lower():
-            upcoming_events.append(event)
-    upcoming_events=sorted(upcoming_events,key=lambda i:i[4],reverse=True)
-    for i in range(len(upcoming_events)):
-        if (len(upcoming_events[i][5])==0):
-            upcoming_events[i]=list(upcoming_events[i])
-            upcoming_events[i][5]="https://cdn.builder.io/api/v1/image/assets/TEMP/9d3041a297c47abe0747b9f55a58146e9ae55c83be378abf990f357e4b053464?placeholderIfAbsent=true&apiKey=2cbf1f5487444b28a9e58914868be763"
-            upcoming_events[i]=tuple(upcoming_events[i])
-        else:
-            upcoming_events[i]=list(upcoming_events[i])
-            upcoming_events[i][5]=pg.pgGetImage(upcoming_events[i][5][0])
-            upcoming_events[i]=tuple(upcoming_events[i])
+
+    upcoming_events = (
+        pg.session.query(pg.Event)
+        .filter(
+            or_(func.lower(pg.Event.category) == category.lower(), category == ''),
+            pg.Event.date > current_datetime
+        )
+        .all()
+    )
+
+    upcoming_events=sorted(upcoming_events,key=lambda i:i.date,reverse=True)
+    
     return render_template('events.html',
                            username=username,
                            profile_link="/myprofile" if username!="Guest User" else "/login",
@@ -273,15 +250,7 @@ def myevents():
         for event_id in pg.pgGetCreatedEvents(username,secret_key):
             event = pg.pgGetEvent(event_id)
             my_events.append(event)
-    for i in range(len(my_events)):
-        if (len(my_events[i][5])==0):
-            my_events[i]=list(my_events[i])
-            my_events[i][5]="https://cdn.builder.io/api/v1/image/assets/TEMP/9d3041a297c47abe0747b9f55a58146e9ae55c83be378abf990f357e4b053464?placeholderIfAbsent=true&apiKey=2cbf1f5487444b28a9e58914868be763"
-            my_events[i]=tuple(my_events[i])
-        else:
-            my_events[i]=list(my_events[i])
-            my_events[i][5]=pg.pgGetImage(my_events[i][5][0])
-            my_events[i]=tuple(my_events[i])
+    
     return render_template('myEvents.html',
                            username=username,
                            profile_link="/myprofile" if username!="Guest User" else "/login",
@@ -292,25 +261,15 @@ def workshops():
     username=request.cookies.get('username')
     if username==None:
         username="Guest User"
-    pg.cursor.execute("SELECT * FROM events;")
     current_datetime = datetime.now()
-    formatted_datetime = str(current_datetime.strftime("%Y-%m-%d %H:%M:%S"))
-    events=pg.cursor.fetchall()
-    upcoming_events=[]
-    for event in events:
-        if str(event[4])>formatted_datetime:
-            upcoming_events.append(event)
-    upcoming_events=sorted(upcoming_events,key=lambda i:i[4])
-    for i in range(len(upcoming_events)):
-        if (len(upcoming_events[i][5])==0):
-            upcoming_events[i]=list(upcoming_events[i])
-            upcoming_events[i][5]="https://cdn.builder.io/api/v1/image/assets/TEMP/9d3041a297c47abe0747b9f55a58146e9ae55c83be378abf990f357e4b053464?placeholderIfAbsent=true&apiKey=2cbf1f5487444b28a9e58914868be763"
-            upcoming_events[i]=tuple(upcoming_events[i])
-        else:
-            upcoming_events[i]=list(upcoming_events[i])
-            upcoming_events[i][5]=pg.pgGetImage(upcoming_events[i][5][0])
-            upcoming_events[i]=tuple(upcoming_events[i])
-    
+    upcoming_events = (
+        pg.session.query(pg.Event)
+        .filter(
+            pg.Event.date > current_datetime
+        )
+        .all()
+    )
+    upcoming_events=sorted(upcoming_events,key=lambda i:i.date,reverse=True)
     return render_template('workshops.html',
                            username=username,
                            profile_link="/myprofile" if username!="Guest User" else "/login",
@@ -342,17 +301,7 @@ def event(id):
     secret_key=request.cookies.get('secret_key')
     if username==None:
         return redirect('/login')
-    event=pg.pgGetEvent(id)     #(id,title,description,category,date,imageids,organizers,access,registered_users)
-    
-    #get image
-    if (len(event[5])==0):
-        event=list(event)
-        event[5]="https://cdn.builder.io/api/v1/image/assets/TEMP/9d3041a297c47abe0747b9f55a58146e9ae55c83be378abf990f357e4b053464?placeholderIfAbsent=true&apiKey=2cbf1f5487444b28a9e58914868be763"
-        event=tuple(event)
-    else:
-        event=list(event)
-        event[5]=pg.pgGetImage(event[5][0])
-        event=tuple(event)
+    event=pg.pgGetEvent(id)
     
     return render_template('eventDetails.html',
                     username=(username  or "Guest User"),
@@ -368,16 +317,7 @@ def register(id):
         return redirect('/login')
     event=pg.pgGetEvent(id)     #(id,title,description,category,date,imageids,organizers,access,registered_users)
     resp = pg.pgRegisterEvent(username,secret_key,id)
-    alreadyRegistered=False if resp['status_code']==200 else True
-    #get image
-    if (len(event[5])==0):
-        event=list(event)
-        event[5]="https://cdn.builder.io/api/v1/image/assets/TEMP/9d3041a297c47abe0747b9f55a58146e9ae55c83be378abf990f357e4b053464?placeholderIfAbsent=true&apiKey=2cbf1f5487444b28a9e58914868be763"
-        event=tuple(event)
-    else:
-        event=list(event)
-        event[5]=pg.pgGetImage(event[5][0])
-        event=tuple(event)
+    alreadyRegistered=not(resp['status_code']==200)
     
     return render_template('register.html',
                     username=username,

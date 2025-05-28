@@ -52,15 +52,15 @@
     <h1>UPCOMING WORKSHOPS</h1>
     <div class="event-cards">
       {% for event in upcoming_events %}
-        {% if event[3]=="Workshop" %}
+        {% if event.category=="Workshop" %}
         <div class="event-card">
-            <img src="{{event[5]}}" alt="Event">
+            <img src="/image/{{event.image_ids[0]}}" alt="Event">
             <div class="event-content">
-                <div class="event-title">{{event[1]}}</div>
+                <div class="event-title">{{event.name}}</div>
                 <div class="event-description">
-                    {{event[2][:250]+"..."}}
+                    {{event.description[:250]+"..."}}
                 </div>
-                <a href="/event/{{event[0]}}" class="event-btn">VIEW DETAILS</a>
+                <a href="/event/{{event.id}}" class="event-btn">VIEW DETAILS</a>
             </div>
         </div>
         {% endif %}
