@@ -55,11 +55,11 @@
         <div class="div-8">
             <div class="div-9">
                 <h2 class="date">Date</h2>
-                <div class="dd-mm-yyyy">{{"{:02}".format(event[4].day)}}/{{"{:02}".format(event[4].month)}}/{{event[4].year}}</div>
+                <div class="dd-mm-yyyy">{{"{:02}".format(event.date.day)}}/{{"{:02}".format(event.date.month)}}/{{event.date.year}}</div>
             </div>
             <div class="div-10">
                 <h2 class="time">Time</h2>
-                <div class="hh-mm">{{"{:02}".format(event[4].hour)}}:{{"{:02}".format(event[4].minute)}}</div>
+                <div class="hh-mm">{{"{:02}".format(event.date.hour)}}:{{"{:02}".format(event.date.minute)}}</div>
             </div>
             <div class="div-11">
                 <h2 class="category">Category</h2>

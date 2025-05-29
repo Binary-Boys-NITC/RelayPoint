@@ -171,7 +171,7 @@ def apiCreateEvent():
                          [request.cookies.get('username')]
                          )
         if resp['status_code']==200:
-            return render_template('createEventConfirm.html')
+            return render_template('createEventConfirm.html',username=request.cookies.get("username"),profile_link='/myprofile')
         else:
             return render_template('createEvent.html',username=request.cookies.get("username"),profile_link='/myprofile',message=resp['message'])
 
@@ -340,13 +340,14 @@ def apiAward():
 def award(id):
     username=request.cookies.get('username')
     secret_key=request.cookies.get('secret_key')
-    registered_users=list(pg.pgGetEvent(id)[-1])
+    registered_users_id=pg.pgGetEvent(id).registered_users
+    registered_users=[]
     event=pg.pgGetEvent(id)
-    for i in range(len(registered_users)):
-        registered_users[i]=pg.pgUserFetch(registered_users[i])
+    for i in registered_users_id:
+        registered_users.append(pg.pgUserFetch(i))
     return render_template('award.html',
                            username=username,
-                           profile_link='myprofile',
+                           profile_link='/myprofile',
                            registered_users=registered_users,
                            event_id=id,
                            event=event

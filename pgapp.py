@@ -18,6 +18,8 @@ def binary_to_base64(binary_data, mime_type):
 dotenv.load_dotenv()
 database_url=os.getenv("DB_URL")
 hash_key=os.getenv("HASH_KEY")
+admin_username=os.getenv("ADMIN_USERNAME")
+admin_password=os.getenv("ADMIN_PASSWORD")
 
 def hasher(password: str) -> str:
     """
@@ -53,7 +55,7 @@ class UserStats(Base):
     username = Column(String, ForeignKey('users.username'), primary_key=True)
     events_ids = Column(MutableList.as_mutable(ARRAY(Integer)))
     created_events_ids =  Column(MutableList.as_mutable(ARRAY(Integer)))
-    points = Column(JSON, nullable=True)
+    points = Column(MutableList.as_mutable(ARRAY(JSON)), nullable=True)
 
 class Event(Base):
     __tablename__ = 'events'
@@ -208,9 +210,12 @@ def pgAwardPoints(organizerUsername,secret_key,studentUsername,eventId,points):
                 if organizerUsername in organizers or "admin" in roles:
                     user_stats = session.query(UserStats).filter(UserStats.username == studentUsername).first()
                     if user_stats is not None:
-                        user_stats.points.append({"event_id":eventId,"points":points})
-                        session.commit()
-                        return {"status_code":200,"message":"Ok"}
+                        if {"event_id":int(eventId),"points":int(points)} not in user_stats.points:
+                            user_stats.points.append({"event_id":int(eventId),"points":int(points)})
+                            session.commit()
+                            return {"status_code":200,"message":"Ok"}
+                        else:
+                            return {"status_code":409,"message":f"Event \'{eventId}\' already awarded."}
                     else:
                         return {"status_code":404,"message":"User not found"}
                 else:
@@ -330,9 +335,4 @@ def resetdb():
 
 if __name__ == "__main__":
     resetdb()
-    event=Event(title="Test Event",description="Test Description",category="Test Category",date=datetime.datetime.now() + datetime.timedelta(days=5),image_ids=[1],organizers=["admin"],access=["all"],registered_users=[])
-    image=Image(data=b"Test Image",mime_type="image/png")
-    session.add(image)
-    session.add(event)
-    session.commit()
-    pgCreateUser("admin","admin",["admin"])
+    pgCreateUser(admin_username,admin_password,["admin"])
