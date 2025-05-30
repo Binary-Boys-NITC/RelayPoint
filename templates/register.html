@@ -62,26 +62,26 @@
         {% else %}
         <h1>YOU ARE ALREADY REGISTERED!</h1>
         {% endif %}
-        <img src="{{event[5]}}" alt="Event featured image" class="event-image">
+        <img src="/image/{{event.image_ids[0]}}" alt="Event featured image" class="event-image">
 
-        <h2>{{event[1]}}</h2>
+        <h2>{{event.name}}</h2>
 
         <p class="event-description">
-            {{event[2]}}
+            {{event.description}}
         </p>
 
         <div class="event-details-grid">
             <div class="detail-item">
                 <h3>Date</h3>
-                <time datetime="2024-01-01">{{"{:02}".format(event[4].day)}}/{{"{:02}".format(event[4].month)}}/{{event[4].year}}</time>
+                <time datetime="2024-01-01">{{"{:02}".format(event.date.day)}}/{{"{:02}".format(event.date.month)}}/{{event.date.year}}</time>
             </div>
             <div class="detail-item">
                 <h3>Time</h3>
-                <time datetime="14:00">{{"{:02}".format(event[4].hour)}}:{{"{:02}".format(event[4].minute)}}</time>
+                <time datetime="14:00">{{"{:02}".format(event.date.hour)}}:{{"{:02}".format(event.date.minute)}}</time>
             </div>
             <div class="detail-item">
                 <h3>Category</h3>
-                <span>{{event[3]}}</span>
+                <span>{{event.category}}</span>
             </div>
         </div>
         <div class="thank-you-for-registering">Thank you for registering!</div>

@@ -114,13 +114,13 @@
     <div class="event-cards">
       {% for event in upcoming_events %}
       <div class="event-card">
-        <img src="{{event[5]}}" alt="Event">
+        <img src="/image/{{event.image_ids[0]}}" alt="Event">
         <div class="event-content">
-          <div class="event-title">{{event[1]}}</div>
+          <div class="event-title">{{event.title}}</div>
           <div class="event-description">
-            {{event[2][:250]+"..."}}
+            {{event.description[:250]+"..."}}
           </div>
-          <a href="/event/{{event[0]}}" class="event-btn">VIEW DETAILS</a>
+          <a href="/event/{{event.id}}" class="event-btn">VIEW DETAILS</a>
         </div>
       </div>
       {% endfor %}
@@ -328,8 +328,8 @@
     }
 
     .event-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 20px;
       margin-bottom: 100px;
     }
@@ -360,8 +360,8 @@
     }
 
     .event-title {
-      font-size: 50px;
-      font-weight: bold;
+      font-size: 2rem;
+      font-weight: 500;
       margin-bottom: 10px;
       font-family: "Jomhuria", sans-serif;
       line-height: 0.8;

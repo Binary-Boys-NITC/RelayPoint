@@ -53,15 +53,15 @@
     <div class="event-cards">
       {% for event in my_events %}
         <div class="event-card">
-            <img src="{{event[5]}}" alt="Event">
+            <img src="/image/{{event.image_ids[0]}}" alt="Event">
             <div class="event-content">
-                <div class="event-title">{{event[1]}}</div>
+                <div class="event-title">{{event.name}}</div>
                 <div class="event-description">
-                    {{event[2][:250]+"..."}}
+                    {{event.description[:250]+"..."}}
                 </div>
                 <div class="d-flex flex-row">
-                  <a href="/event/{{event[0]}}" class="event-btn">VIEW DETAILS</a>
-                  <a href="/award/{{event[0]}}" class="event-btn">AWARD POINTS</a>
+                  <a href="/event/{{event.id}}" class="event-btn">VIEW DETAILS</a>
+                  <a href="/award/{{event.id}}" class="event-btn">AWARD POINTS</a>
                 </div>
             </div>
         </div>
