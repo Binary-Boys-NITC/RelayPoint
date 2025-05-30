@@ -10,34 +10,44 @@
 </head>
 <body>
     <!-- Navigation Bar-->
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#"><img src="../static/images/logo.png" alt="Relay-Piont Logo" height="50" style="margin-left: 20px;"/></a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0 d-flex justify-content-around w-100">
-                <li class="nav-item">
-                <a class="nav-link" href="#">About Us</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="#">Leaderboard</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="#">My Events</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="#">Community</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="#"><img src="../static/images/user_logo.jpg" height="50" style="border-radius: 50%;"/></a>
-                </li>
-            </ul>
-        </div>
-    </div>
-    </nav>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light ">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <img src="../static/images/logo.png" class="logo" alt="Logo">
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" 
+                        aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">About Us</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Leaderboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">My Events</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Community</a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex">
+                        <a class="btn btn-outline-primary me-2" href="#">Login</a>
+                        <a class="btn btn-primary" href="#">Signup</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
     <!--Selected Event Photo And Description-->
+    <div class="container">
     <h1>Event Name</h1>
     <div class="main-event-block">
         <a href="#"><button type="button" class="btn btn-secondary btn-sm" id="back-button">Back</button></a>
@@ -87,11 +97,11 @@
     </div>
     <br />
     <!--Other Events-->
-    <h3 style="margin-left: 20px;">Other Events You Might Like<h3>
+    <h3>Other Events You Might Like<h3>
     <div class="container">
         <div class="row">
             <div class="col-4">
-                <div class="card" style="width: 18rem;">
+                <div class="card">
                     <img src="../static/images/img2.jpg" class="card-img-top" alt="...">
                     <div class="card-body">
                         <h5 class="card-title">Event Name</h5>
@@ -101,7 +111,7 @@
                 </div>
             </div>
             <div class="col-4">
-                <div class="card" style="width: 18rem;">
+                <div class="card">
                     <img src="../static/images/img2.jpg" class="card-img-top" alt="...">
                     <div class="card-body">
                         <h5 class="card-title">Event Name</h5>
@@ -111,7 +121,7 @@
                 </div>
             </div>
             <div class="col-4">
-                <div class="card" style="width: 18rem;">
+                <div class="card">
                     <img src="../static/images/img2.jpg" class="card-img-top" alt="...">
                     <div class="card-body">
                         <h5 class="card-title">Event Name</h5>
@@ -124,7 +134,7 @@
         <br />
         <div class="row">
             <div class="col-4">
-                <div class="card" style="width: 18rem;">
+                <div class="card">
                     <img src="../static/images/img2.jpg" class="card-img-top" alt="...">
                     <div class="card-body">
                         <h5 class="card-title">Event Name</h5>
@@ -134,7 +144,7 @@
                 </div>
             </div>
             <div class="col-4">
-                <div class="card" style="width: 18rem;">
+                <div class="card">
                     <img src="../static/images/img2.jpg" class="card-img-top" alt="...">
                     <div class="card-body">
                         <h5 class="card-title">Event Name</h5>
@@ -144,7 +154,7 @@
                 </div>
             </div>
             <div class="col-4">
-                <div class="card" style="width: 18rem;">
+                <div class="card">
                     <img src="../static/images/img2.jpg" class="card-img-top" alt="...">
                     <div class="card-body">
                         <h5 class="card-title">Event Name</h5>
@@ -157,6 +167,7 @@
     </div>  
     <br />  
     <div class="text-center"><div class="btn btn-sm btn-secondary ">See All Events</div></div>
+    </div>
     <!--Footer-->
     <footer>
         <h5>RelayPoint</h5>
