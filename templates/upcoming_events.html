@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homepage - RelayPoint</title>
+    <title>Upcoming Events - RelayPoint</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
     <style>
         h1{
@@ -16,49 +16,15 @@
     </style>
 </head>
 <body data-bs-theme="dark">
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-      <div class="container-fluid">
-    <a class="navbar-brand" href="#">
-      <img src="./images/logo.png" alt="" width="50" height="50">
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Events</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Leaderboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Community</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Workshops</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">About us</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Create Event</a>
-        </li>
-      </ul>
-      <form class="d-flex" role="search">
-        <button class="btn btn-outline-primary" type="submit">Login</button>
-        <button class="btn btn-outline-primary mx-3" type="submit">Sign Up</button>
-      </form>
-        </div>
-        </div>
-    </nav>
+  {% include 'navbar.html' %}
 
         <div class="container-fluid row mt-5">
       <div class="col-lg-12 d-flex flex-row">
+        {% if my_events is defined %}
+        <h2>My Events</h2>
+        {% else %}
         <h2>Upcoming Events</h2>
+        {% endif %}
         <div class="ms-auto d-flex gap-3">
           <div class="dropdown">
             <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -89,46 +55,18 @@
       </div>
       <div class="container-fluid">
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+          {% for event in upcoming_events %}
           <div class="col">
             <div class="card m-3 h-100">
-            <img src="./images/img2.jpg" class="card-img-top " alt="...">
+            <img src="/image/{{event.image_ids[0]}}" class="card-img-top " alt="...">
             <div class="card-body">
-              <h5 class="card-title">Card title</h5>
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
-              <a href="#" class="btn btn-primary">Go somewhere</a>
+              <h5 class="card-title">{{event.name}}</h5>
+              <p class="card-text">{{event.description}}</p>
+              <a href="/event/{{event.id}}" class="btn btn-primary">View Event</a>
             </div>
           </div>
           </div>
-          <div class="col">
-            <div class="card m-3 h-100">
-            <img src="./images/img2.jpg" class="card-img-top" alt="...">
-            <div class="card-body">
-              <h5 class="card-title">Card title</h5>
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
-              <a href="#" class="btn btn-primary">Go somewhere</a>
-            </div>
-          </div>
-          </div>
-          <div class="col">
-            <div class="card m-3 h-100">
-            <img src="./images/img2.jpg" class="card-img-top" alt="...">
-            <div class="card-body">
-              <h5 class="card-title">Card title</h5>
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
-              <a href="#" class="btn btn-primary">Go somewhere</a>
-            </div>
-          </div>
-          </div>
-          <div class="col">
-            <div class="card m-3 h-100">
-            <img src="./images/img2.jpg" class="card-img-top" alt="...">
-            <div class="card-body">
-              <h5 class="card-title">Card title</h5>
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
-              <a href="#" class="btn btn-primary">Go somewhere</a>
-            </div>
-            </div>
-          </div>
+          {% endfor %}
         </div>
       </div>
 

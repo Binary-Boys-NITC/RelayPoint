@@ -17,45 +17,7 @@
 </head>
 <body data-bs-theme="dark">
     <!--Navigation Bar-->
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-      <div class="container-fluid">
-    <a class="navbar-brand" href="#">
-      <img src="./images/logo.png" alt="" width="50" height="50">
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Events</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Leaderboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Community</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Workshops</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">About us</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Create Event</a>
-        </li>
-      </ul>
-      <form class="d-flex" role="search">
-        <button class="btn btn-outline-primary" type="submit">Login</button>
-        <button class="btn btn-outline-primary mx-3" type="submit">Sign Up</button>
-      </form>
-        </div>
-        </div>
-    </nav>
+    {% include 'navbar.html' %}
     <!--Leaderboard-->
     <div class="container mt-5 " >
         <div class="text-center"><h1>Leaderboard</h1></div>
@@ -68,10 +30,10 @@
                 <div class="col-2">Events</div>
            </div>
            <div class="row">
-                <div class="col-2 text-start">10.</div>
-                <div class="col">John</div>
-                <div class="col-2">2</div>
-                <div class="col-2">1</div>
+                <div class="col-2 text-start">{{myrank}}</div>
+                <div class="col">{{username}}</div>
+                <div class="col-2">{{mypoints}}</div>
+                <div class="col-2">{{myworkshops}}</div>
            </div>             
         </div>
         <h3>Global Rank</h3>
@@ -82,60 +44,14 @@
                 <div class="col-2">Points</div>
                 <div class="col-2">Events</div>
            </div>
+           {% for guy in LB %}
            <div class="row">
-                <div class="col-2 text-start">1.</div>
-                <div class="col">John 🥇</div>
-                <div class="col-2">2</div>
-                <div class="col-2">1</div>
+                <div class="col-2 text-start">{{LB.index(guy)+1}}.</div>
+                <div class="col">{{guy.username}}</div>
+                <div class="col-2">{{guy.pointsTotal}}</div>
+                <div class="col-2">{{guy.events_ids|length}}</div>
            </div>
-           <div class="row ">
-                <div class="col-2 text-start">2.</div>
-                <div class="col">John 🥈</div>
-                <div class="col-2">2</div>
-                <div class="col-2">1</div>
-           </div>
-           <div class="row ">
-                <div class="col-2 text-start">3.</div>
-                <div class="col">John 🥉</div>
-                <div class="col-2">2</div>
-                <div class="col-2">1</div>
-           </div>
-           <div class="row">
-                <div class="col-2 text-start">4.</div>
-                <div class="col">John </div>
-                <div class="col-2">2</div>
-                <div class="col-2">1</div>
-           </div>
-           <div class="row">
-                <div class="col-2 text-start">5.</div>
-                <div class="col">John</div>
-                <div class="col-2">2</div>
-                <div class="col-2">1</div>
-           </div>
-           <div class="row">
-                <div class="col-2 text-start">6.</div>
-                <div class="col">John</div>
-                <div class="col-2">2</div>
-                <div class="col-2">1</div>
-           </div>
-           <div class="row">
-                <div class="col-2 text-start">7.</div>
-                <div class="col">John</div>
-                <div class="col-2">2</div>
-                <div class="col-2">1</div>
-           </div>
-           <div class="row">
-                <div class="col-2 text-start">8.</div>
-                <div class="col">John</div>
-                <div class="col-2">2</div>
-                <div class="col-2">1</div>
-           </div>
-           <div class="row">
-                <div class="col-2 text-start">9.</div>
-                <div class="col">John</div>
-                <div class="col-2">2</div>
-                <div class="col-2">1</div>
-           </div>
+           {% endfor %}
 
         </div>
     </div>    

@@ -12,45 +12,7 @@
     </style>
 </head>
 <body data-bs-theme="dark">
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-      <div class="container-fluid">
-    <a class="navbar-brand" href="#">
-      <img src="./images/logo.png" alt="" width="50" height="50">
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Events</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Leaderboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Community</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Workshops</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">About us</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Create Event</a>
-        </li>
-      </ul>
-      <form class="d-flex" role="search">
-        <button class="btn btn-outline-primary" type="submit">Login</button>
-        <button class="btn btn-outline-primary mx-3" type="submit">Sign Up</button>
-      </form>
-        </div>
-        </div>
-    </nav>
+  {% include 'navbar.html' %}
 
     <div class="container-fluid d-flex justify-content-center">
         <h1>About Us</h1>
@@ -59,7 +21,7 @@
     <div class="row mx-1 row-cols-1 row-cols-sm-4 g-4">
     <div class="col">
         <div class="card h-100">
-        <img src="./images/Ibinu.png" class="card-img-top" alt="Ibinu Jaleel">
+        <img src="../static/images/Ibinu.png" class="card-img-top" alt="Ibinu Jaleel">
         <div class="card-body">
             <h5 class="card-title">Ibinu Jaleel</h5>
             <p class="card-text">Hey 👋! I am Ibinu. I'm a builder at heart 🛠️, always exploring how to turn unconventional ideas into products people genuinely love. My hobbies are watching movies 🎥, playing games 🎮 and most of the time.. tinkering with my laptop 💻. I'm always looking out for opportunities so DM me when ur free. Adiós ✌️</p>
@@ -69,7 +31,7 @@
     </div>
     <div class="col">
         <div class="card h-100">
-        <img src="./images/Shalin.png" class="card-img-top" alt="Shalin Varghese">
+        <img src="../static/images/Shalin.png" class="card-img-top" alt="Shalin Varghese">
         <div class="card-body">
             <h5 class="card-title">Shalin Varghese</h5>
             <p class="card-text">Hi, I'm Shalin Varghese, a CSE student at NIT Calicut. I'm really passionate about UI/UX design & web development as I love creating digital experiences that strike a balance between functionality and aesthetics. I have a solid background in programming & enjoy working on creative projects.</p>
@@ -79,7 +41,7 @@
     </div>
     <div class="col">
         <div class="card h-100">
-        <img src="./images/Jiss.jpg" class="card-img-top" alt="Jiss Janex">
+        <img src="../static/images/Jiss.jpg" class="card-img-top" alt="Jiss Janex">
         <div class="card-body">
             <h5 class="card-title">Jiss Janex</h5>
             <p class="card-text">Hi, I'm Jiss Janex, a first-year computer science student at NIT Calicut. I'm really into programming and currently exploring the fundamentals of C. I like keeping things clear and to the point, especially when learning or solving problems. I'm passionate about tech and always looking for ways to innovate and grow.</p>
@@ -89,7 +51,7 @@
     </div>
     <div class="col">
         <div class="card h-100">
-        <img src="./images/Richu.jpg" class="card-img-top" alt="Richu Shine">
+        <img src="../static/images/Richu.jpg" class="card-img-top" alt="Richu Shine">
         <div class="card-body">
             <h5 class="card-title">Richu Shine</h5>
             <p class="card-text">My name is Richu, and I am a first-year CSE student at NIT Calicut. A professional frontend developer, I specialize in creating intuitive interfaces & am proficient in C, CSS, Python, & HTML. I enjoy transforming ideas into functional designs. I'm eager to learn & grow in the evolving tech world</p>

@@ -22,62 +22,25 @@
     </style>
 </head>
 <body data-bs-theme="dark">
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-      <div class="container-fluid">
-    <a class="navbar-brand" href="#">
-      <img src="./images/logo.png" alt="" width="50" height="50">
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Events</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Leaderboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Community</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Workshops</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">About us</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Create Event</a>
-        </li>
-      </ul>
-      <form class="d-flex" role="search">
-        <button class="btn btn-outline-primary" type="submit">Login</button>
-        <button class="btn btn-outline-primary mx-3" type="submit">Sign Up</button>
-      </form>
-        </div>
-        </div>
-    </nav>
+  {% include 'navbar.html' %}
 
-    <div class="container-fluid d-flex justify-content-center">
+    <div class="container-fluid d-flex justify-content-center mt-5">
         <h1>Login</h1>
     </div>
 
     <div class="d-flex justify-content-center">
-    <div class="container-fluid" style="max-width: 400px; height: 400px;">
-        <h3>Username</h3>
-        <input type="text" placeholder="Username" class="form-control mb-3"/>
+    <div class="container-fluid mt-5" style="max-width: 400px; height: 400px;">
+      <form class="login-form" action="/api/login" method="POST">
+        <h5>Username</h5>
+        <input type="text" placeholder="Username" class="form-control mb-3" name="username"/>
         
-        <h3>Password</h3>
-        <input type="password" placeholder="Password" class="form-control mb-3"/>
-        <button type="button" class="btn btn-primary">Login</button>
-
+        <h5>Password</h5>
+        <input type="password" placeholder="Password" class="form-control mb-3" name="password"/>
+        {{message}}
+        <button type="submit" class="btn btn-primary">Login</button>
+        </form>
     <div class="mt-4 extra">
-      <a href="#" class="d-block mb-2 text-decoration-none  fw-slight">Forgot Password?</a>
-      <a href="#" class="d-block text-decoration-none  fw-light">New User?</a>
+      <a href="/signup" class="d-block text-decoration-none " style="font-weight: 500;">New User?</a>
     </div>
 
     </div>

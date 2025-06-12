@@ -14,109 +14,48 @@
             margin-top: 30px;
         }
         .details{
-            font-weight: lighter;
+            font-weight: 400;
 
         }
     </style>
 </head>
 <body data-bs-theme="dark">
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-      <div class="container-fluid">
-    <a class="navbar-brand" href="#">
-      <img src="./images/logo.png" alt="" width="50" height="50">
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Events</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Leaderboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Community</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Workshops</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">About us</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Create Event</a>
-        </li>
-      </ul>
-      <form class="d-flex" role="search">
-        <button class="btn btn-outline-primary" type="submit">Login</button>
-        <button class="btn btn-outline-primary mx-3" type="submit">Sign Up</button>
-      </form>
-        </div>
-        </div>
-    </nav>
+    {% include 'navbar.html' %}
 
     <h1>My Profile</h1>
     <div class="container row d-flex justify-content-center">
-        <img src="./images/user_logo.jpg" class="col-3" style="border-radius: 50%; height: 150px; width: 150px;"/>
+        <img src="../static/images/user_logo.jpg" class="col-3" style="border-radius: 50%; height: 150px; width: 150px; padding:0;"/>
         <div class="col-9 m-3">
-            <h3>Name: <span class="details">First Last</span></h3>
-            <h3>Workshops Attended: <span class="details">NIL</span></h3>
-            <h3>Activity Points: <span class="details">NIL</span></h3>
-            <h3>My Rank: <span class="details">NIL</span></h3>
+            <h3>Name: <span class="details">{{username}}</span></h3>
+            <h3>Workshops Attended: <span class="details">{{workshop_count}}</span></h3>
+            <h3>Activity Points: <span class="details">{{points}}</span></h3>
+            <h3>My Rank: <span class="details">{{rank}}</span></h3>
         </div>
-        <div class="row gap-3 d-flex justify-content-center">
-            <button type="button" class="btn col-5 btn-primary">My Events</button>
-            <button type="button" class="btn col-5 btn-primary">Logout</button>
+        <div class="row gap-1 d-flex flex-row justify-content-start ms-5">
+            <a href='/myevents' style="width: auto;">
+            <button type="button" class="btn btn-primary">My Events</button>
+            </a>
+            <a href='/logout' style="width: auto;">
+            <button type="button" class="btn btn-primary">Logout</button>
+            </a>
         </div>
     </div>
     <h2>Recent Workshops</h2>
           <div class="container-fluid">
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+          {% for event in recent_events[:5] %}
           <div class="col">
             <div class="card m-3 h-100">
-            <img src="./images/img2.jpg" class="card-img-top " alt="...">
+            <img src="/image/{{event.image_ids[0]}}" class="card-img-top " alt="...">
             <div class="card-body">
-              <h5 class="card-title">Card title</h5>
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
-              <a href="#" class="btn btn-primary">Go somewhere</a>
+              <h5 class="card-title">{{event.name}}</h5>
+              <p class="card-text">{{event.description}}</p>
+              <a href="/event/{{event.id}}" class="btn btn-primary">View Event</a>
             </div>
           </div>
           </div>
-          <div class="col">
-            <div class="card m-3 h-100">
-            <img src="./images/img2.jpg" class="card-img-top" alt="...">
-            <div class="card-body">
-              <h5 class="card-title">Card title</h5>
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
-              <a href="#" class="btn btn-primary">Go somewhere</a>
-            </div>
-          </div>
-          </div>
-          <div class="col">
-            <div class="card m-3 h-100">
-            <img src="./images/img2.jpg" class="card-img-top" alt="...">
-            <div class="card-body">
-              <h5 class="card-title">Card title</h5>
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
-              <a href="#" class="btn btn-primary">Go somewhere</a>
-            </div>
-          </div>
-          </div>
-          <div class="col">
-            <div class="card m-3 h-100">
-            <img src="./images/img2.jpg" class="card-img-top" alt="...">
-            <div class="card-body">
-              <h5 class="card-title">Card title</h5>
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card’s content.</p>
-              <a href="#" class="btn btn-primary">Go somewhere</a>
-            </div>
-            </div>
-          </div>
+          {% endfor %}
+          
         </div>
       </div>
     </div>

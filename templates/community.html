@@ -15,45 +15,7 @@
 </head>
 <body data-bs-theme="dark">
     <!--Navigation Bar-->
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-      <div class="container-fluid">
-    <a class="navbar-brand" href="#">
-      <img src="./images/logo.png" alt="" width="50" height="50">
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Events</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Leaderboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Community</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Workshops</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">About us</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Create Event</a>
-        </li>
-      </ul>
-      <form class="d-flex" role="search">
-        <button class="btn btn-outline-primary" type="submit">Login</button>
-        <button class="btn btn-outline-primary mx-3" type="submit">Sign Up</button>
-      </form>
-        </div>
-        </div>
-    </nav>
+    {% include 'navbar.html' %}
     <!--Community Heading and User Message-->
     <div class="container mt-5">
         <div class="row text-center mb-5">
@@ -62,9 +24,11 @@
         <div class="row">
             <div class="col">
                 <div class="mb-3">
-                    <label for="exampleFormControlTextarea1" class="form-label mb-3"><img src="./images/user_logo.jpg" class="profile-photo" alt="user-logo"> UserName</label>
-                    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" placeholder="Share your thoughts with the community" ></textarea>
-                    <button class="btn btn-primary mt-2">Post</button>
+                  <form action="/api/post_blog" method="POST">
+                    <label for="exampleFormControlTextarea1" class="form-label mb-3"><img src="../static/images/user_logo.jpg" class="profile-photo" alt="user-logo"> {{username}}</label>
+                    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" placeholder="Share your thoughts with the community" name="blog"></textarea>
+                    <button type="submit" class="btn btn-primary mt-2">Post</button>
+                  </form>
                 </div>
             </div>
         </div>
@@ -74,23 +38,17 @@
         <div class="row mb-4">
             <div class="col"><h2>Latest Discussions</h2></div>
         </div>
+        {% for blog in blogs %}
         <div class="row">
             <div class="col">
                 <div class="mb-3">
-                    <label for="exampleFormControlTextarea1" class="form-label"><img src="./images/user_logo.jpg" class="profile-photo" alt="user-logo"> User1</label>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin elementum orci sed aliquet finibus. Sed a ullamcorper ante, vel ultricies sem. </p>
+                    <label for="exampleFormControlTextarea1" class="form-label"><img src="../static/images/user_logo.jpg" class="profile-photo" alt="user-logo"> {{blog.username}}</label>
+                    <p>{{blog.blog}}</p>
                 </div>
             </div>
         </div>
         <br />
-        <div class="row">
-            <div class="col">
-                <div class="mb-3">
-                    <label for="exampleFormControlTextarea1" class="form-label"><img src="./images/user_logo.jpg" class="profile-photo" alt="user-logo"> User 2</label>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin elementum orci sed aliquet finibus. Sed a ullamcorper ante, vel ultricies sem. </p>
-                </div>
-            </div>
-        </div>
+        {% endfor %}
     </div>
     <!--Footer-->
     <div class="container-fluid">

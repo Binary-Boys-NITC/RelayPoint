@@ -57,7 +57,7 @@ def image(id):
 def index():
     username=request.cookies.get("username")
     secret_key=request.cookies.get("secret_key")
-    latest=pg.session.query(pg.Event).order_by(pg.Event.date.desc()).first()
+    latest=pg.session.query(pg.Event).order_by(pg.Event.date.desc()).all()[:3]
 
     current_datetime = datetime.now()
 
@@ -81,7 +81,7 @@ def index():
                 event.time_difference = time_difference.days  # This does NOT persist in DB
             
 
-            return render_template('index.html',
+            return render_template('home.html',
                                     username=request.cookies.get("username"),
                                     profile_link='/myprofile',
                                     points=points,
@@ -92,7 +92,7 @@ def index():
                                     latest=latest
                                     )
     
-    return render_template('index.html',
+    return render_template('home.html',
                             username="Guest User",
                             profile_link='/login',
                             latest=latest,
@@ -142,9 +142,9 @@ def createEvent():
     if request.cookies.get('username')!=None:
         roles=pg.pgUserFetch(request.cookies.get('username'))["data"]["roles"]
         if "organizer" in roles or "admin" in roles:
-            return render_template('createEvent.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=True)
+            return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=True)
         else:
-            return render_template('createEvent.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=False)
+            return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=False)
         
     else:
         return redirect('/login')
@@ -154,13 +154,15 @@ def apiCreateEvent():
     binary_data=request.files['image'].read()
     mimetype=request.files['image'].mimetype
     image_id=pg.pgUploadImage(binary_data,mimetype)
+    formdate=request.form['date']
     if pg.pgAuthorizeCreateEvent(request.cookies.get('username'),request.cookies.get('secret_key')):
+        #formdate is 2025-06-17 12:00
         date={
-            "year":int(request.form['year']),
-            "month":int(request.form['month']),
-            "day":int(request.form['day']),
-            "hour":int(request.form['hour']),
-            "minute":int(request.form['minute']),
+            "year":int(formdate.split('-')[0]),
+            "month":int(formdate.split('-')[1]),
+            "day":int(formdate.split('-')[2].split(' ')[0]),
+            "hour":int(formdate.split(' ')[1].split(':')[0]),
+            "minute":int(formdate.split(' ')[1].split(':')[1]),
         }
         resp = pg.pgCreateEvent(request.cookies.get('username'),
                          request.form['eventName'],
@@ -171,9 +173,9 @@ def apiCreateEvent():
                          [request.cookies.get('username')]
                          )
         if resp['status_code']==200:
-            return render_template('createEventConfirm.html',username=request.cookies.get("username"),profile_link='/myprofile')
+            return redirect('/')
         else:
-            return render_template('createEvent.html',username=request.cookies.get("username"),profile_link='/myprofile',message=resp['message'])
+            return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',message=resp['message'])
 
 @app.route('/myprofile',methods=["GET"])
 def myprofile():
@@ -190,7 +192,7 @@ def myprofile():
         recent_events.append(pg.pgGetEvent(id))
         
     
-    return render_template('/myprofile.html',
+    return render_template('/profile.html',
                            username=username,
                            profile_url='/myprofile',
                            workshop_count=len(recent_events_ids),
@@ -233,7 +235,7 @@ def events():
 
     upcoming_events=sorted(upcoming_events,key=lambda i:i.date,reverse=True)
     
-    return render_template('events.html',
+    return render_template('upcoming_events.html',
                            username=username,
                            profile_link="/myprofile" if username!="Guest User" else "/login",
                            upcoming_events=upcoming_events,
@@ -251,29 +253,11 @@ def myevents():
             event = pg.pgGetEvent(event_id)
             my_events.append(event)
     
-    return render_template('myEvents.html',
+    return render_template('upcoming_events.html',
                            username=username,
                            profile_link="/myprofile" if username!="Guest User" else "/login",
                            my_events=my_events)
 
-@app.route('/workshops',methods=["GET"])
-def workshops():
-    username=request.cookies.get('username')
-    if username==None:
-        username="Guest User"
-    current_datetime = datetime.now()
-    upcoming_events = (
-        pg.session.query(pg.Event)
-        .filter(
-            pg.Event.date > current_datetime
-        )
-        .all()
-    )
-    upcoming_events=sorted(upcoming_events,key=lambda i:i.date,reverse=True)
-    return render_template('workshops.html',
-                           username=username,
-                           profile_link="/myprofile" if username!="Guest User" else "/login",
-                           upcoming_events=upcoming_events)
 
 @app.route('/about',methods=["GET"])
 def about():
@@ -303,10 +287,11 @@ def event(id):
         return redirect('/login')
     event=pg.pgGetEvent(id)
     
-    return render_template('eventDetails.html',
+    return render_template('registered.html',
                     username=(username  or "Guest User"),
                     profile_link="/myprofile" if username=="Guest User" else "/login",
-                    event=event
+                    event=event,
+                    alreadyRegistered=None
                     )
     
 @app.route('/register/<int:id>',methods=["GET"])
@@ -319,7 +304,7 @@ def register(id):
     resp = pg.pgRegisterEvent(username,secret_key,id)
     alreadyRegistered=not(resp['status_code']==200)
     
-    return render_template('register.html',
+    return render_template('registered.html',
                     username=username,
                     profile_link="/myprofile" if username!="Guest User" else "/login",
                     event=event,
