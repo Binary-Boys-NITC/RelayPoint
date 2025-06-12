@@ -1,334 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard UI</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Inter:ital,opsz@0,14..32;1,14..32&display=swap"
-    rel="stylesheet">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz@0,14..32;1,14..32&family=Jomhuria&display=swap"
-    rel="stylesheet">
-
-
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .row{
+            margin-bottom: 5px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            background-color: rgb(18, 112, 104);
+            border-radius: 20px;
+        }
+    </style>
 </head>
-
-<body>
-
-  <header>
-    <div class="d-inline-flex align-items-center">
-      <a href='/'>
-        <div class="" id="logo">
-          <img src="../static/images/logo.png" alt="">
-        </div>
-      </a>
-      <nav class="inria-sans-regular mx-5">
-        <a href="/events">Events</a>
-        <a href="/leaderboard">Leaderboard</a>
-        <a href="/community">Community</a>
-        <a href="/workshops">Workshops</a>
-        <a href="/about">About Us</a>
-        <a href="/create_event">Create Event</a>
-      </nav>
-    </div>
-    <a href="{{profile_url}}">
-      <div class="m-3 d-inline-flex align-items-center" id="profile" >
-        <div class="inria-sans-regular mx-3">{{username}}</div>
-        <img src="data:image/png;base64,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" alt="">
-      </div>
+<body data-bs-theme="dark">
+    <!--Navigation Bar-->
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container-fluid">
+    <a class="navbar-brand" href="#">
+      <img src="./images/logo.png" alt="" width="50" height="50">
     </a>
-  </header>
-    
-  <main class="leaderboard">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Events</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Leaderboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Community</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Workshops</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">About us</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Create Event</a>
+        </li>
+      </ul>
+      <form class="d-flex" role="search">
+        <button class="btn btn-outline-primary" type="submit">Login</button>
+        <button class="btn btn-outline-primary mx-3" type="submit">Sign Up</button>
+      </form>
+        </div>
+        </div>
+    </nav>
+    <!--Leaderboard-->
+    <div class="container mt-5 " >
+        <div class="text-center"><h1>Leaderboard</h1></div>
+        <h3>My Rank</h3>
+        <div class="container text-center mb-5">        <!--My rank--> 
+           <div class="row bg-secondary">
+                <div class="col-2 text-start">Rank</div>
+                <div class="col ">Name</div>
+                <div class="col-2">Points</div>
+                <div class="col-2">Events</div>
+           </div>
+           <div class="row">
+                <div class="col-2 text-start">10.</div>
+                <div class="col">John</div>
+                <div class="col-2">2</div>
+                <div class="col-2">1</div>
+           </div>             
+        </div>
+        <h3>Global Rank</h3>
+        <div class="container text-center mb-5">        <!--Global rank--> 
+           <div class="row bg-secondary">
+                <div class="col-2 text-start">Rank</div>
+                <div class="col ">Name</div>
+                <div class="col-2">Points</div>
+                <div class="col-2">Events</div>
+           </div>
+           <div class="row">
+                <div class="col-2 text-start">1.</div>
+                <div class="col">John 🥇</div>
+                <div class="col-2">2</div>
+                <div class="col-2">1</div>
+           </div>
+           <div class="row ">
+                <div class="col-2 text-start">2.</div>
+                <div class="col">John 🥈</div>
+                <div class="col-2">2</div>
+                <div class="col-2">1</div>
+           </div>
+           <div class="row ">
+                <div class="col-2 text-start">3.</div>
+                <div class="col">John 🥉</div>
+                <div class="col-2">2</div>
+                <div class="col-2">1</div>
+           </div>
+           <div class="row">
+                <div class="col-2 text-start">4.</div>
+                <div class="col">John </div>
+                <div class="col-2">2</div>
+                <div class="col-2">1</div>
+           </div>
+           <div class="row">
+                <div class="col-2 text-start">5.</div>
+                <div class="col">John</div>
+                <div class="col-2">2</div>
+                <div class="col-2">1</div>
+           </div>
+           <div class="row">
+                <div class="col-2 text-start">6.</div>
+                <div class="col">John</div>
+                <div class="col-2">2</div>
+                <div class="col-2">1</div>
+           </div>
+           <div class="row">
+                <div class="col-2 text-start">7.</div>
+                <div class="col">John</div>
+                <div class="col-2">2</div>
+                <div class="col-2">1</div>
+           </div>
+           <div class="row">
+                <div class="col-2 text-start">8.</div>
+                <div class="col">John</div>
+                <div class="col-2">2</div>
+                <div class="col-2">1</div>
+           </div>
+           <div class="row">
+                <div class="col-2 text-start">9.</div>
+                <div class="col">John</div>
+                <div class="col-2">2</div>
+                <div class="col-2">1</div>
+           </div>
 
-    <section class="main-content">
-        <h1 class="section-title">LEADERBOARD</h1>
-        
-        <section class="my-rank-section">
-            <h2 class="rank-title">MY RANK</h2>
-            <div class="rank-headers">
-                <span>RANK</span>
-                <span>NAME</span>
-                <span>POINTS</span>
-                <span>EVENTS</span>
-            </div>
-            <div class="rank-item my-rank">
-                <span class="rank-number">{{myrank}}</span>
-                <div class="user-info">
-                    <div class="user-avatar" role="img" aria-label="User avatar"></div>
-                    <span class="user-name">{{username}}</span>
-                </div>
-                <span class="points">{{mypoints}}</span>
-                <span class="workshops">{{myworkshops}}</span>
-            </div>
-        </section>
+        </div>
+    </div>    
 
-        <section class="global-rank-section">
-            <h2 class="rank-title">GLOBAL RANK</h2>
-            <div class="rank-headers">
-                <span>RANK</span>
-                <span>NAME</span>
-                <span>POINTS</span>
-                <span>WORKSHOPS</span>
-            </div>
-            <div class="rank-list">
-              {% for guy in LB %}
-                <div class="rank-item">
-                    <span class="rank-number">{{LB.index(guy)+1}}</span>
-                    <div class="user-info">
-                        <div class="user-avatar" role="img" aria-label="User avatar"></div>
-                        <span class="user-name">{{guy.username}}</span>
-                    </div>
-                    <span class="points">{{guy.pointsTotal}}</span>
-                    <span class="workshops">{{guy.events_ids|length}}</span>
-                </div>
-                {% endfor %}
-            </div>
-        </section>
-    </section>
 
-  </main>
-
-  <footer class="footer" role="contentinfo">
-    <div class="footer-content align-items-center">
-      <div class="footer-brand ">
-        <img style="width: 60px;height:60px;"
-          src="../static/images/logo.png"
-          alt="Relay Point Footer Logo" class="footer-logo" width="70" height="70">
-        <span class="footer-brand-name jomhuria-regular">RELAY POINT</span>
-      </div>
-      <div class="footer-contact">
-        <h2 class="contact-heading">CONTACT US</h2>
-        <a href="mailto:support@relaypoint.com" class="contact-email">support@relaypoint.com</a>
-      </div>
+    <!--Footer-->
+    <div class="container-fluid">
+    <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+      
+      <p class="col-md-4 mb-0 text-body-secondary">© 2025 RelayPoint, Inc</p>
+      
+      <a href="/" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none" aria-label="Bootstrap">
+        <svg class="bi me-2" width="40" height="32" aria-hidden="true">
+          <use xlink:href="#bootstrap"></use>
+        </svg>
+      </a>
+      
+      <ul class="nav col-md-4 justify-content-end">
+        <li class="nav-item">
+          <a href="#" class="nav-link px-2 text-body-secondary">Home</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link px-2 text-body-secondary">Features</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link px-2 text-body-secondary">Pricing</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link px-2 text-body-secondary">FAQs</a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link px-2 text-body-secondary">About</a>
+        </li>
+      </ul>
+    </footer>
     </div>
-  </footer>
-  <style>
-    .inria-sans-light {
-      font-family: "Inria Sans", serif;
-      font-weight: 300;
-      font-style: normal;
-    }
-    
-    .inria-sans-regular {
-      font-family: "Inria Sans", serif;
-      font-weight: 400;
-      font-style: normal;
-    }
-    
-    .inria-sans-bold {
-      font-family: "Inria Sans", serif;
-      font-weight: 700;
-      font-style: normal;
-    }
-    
-    .inria-sans-light-italic {
-      font-family: "Inria Sans", serif;
-      font-weight: 300;
-      font-style: italic;
-    }
-    
-    .inria-sans-regular-italic {
-      font-family: "Inria Sans", serif;
-      font-weight: 400;
-      font-style: italic;
-    }
-    
-    .inria-sans-bold-italic {
-      font-family: "Inria Sans", serif;
-      font-weight: 700;
-      font-style: italic;
-    }
-    .jomhuria-regular {
-      font-family: "Jomhuria", serif;
-      font-weight: 400;
-      font-style: normal;
-    }
-    
-    
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #2C3333;
-      color: white;
-    }
-    
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #2C3333;
-    }
-    
-    header nav a {
-      color: white;
-      margin: 0 10px;
-      text-decoration: none;
-    }
-    
-    header nav a:hover {
-      text-decoration: underline;
-    }
-    
-    footer {
-      width:100% !important;
-      background-color: #212529;
-      text-align: center;
-      padding: 10px;
-      position: relative;
-    }
-    
-    footer a {
-      color: #17a2b8;
-      text-decoration: none;
-    }
-    
-    footer a:hover {
-      text-decoration: underline;
-    }
-    
-    header {
-      font-size: 20px;
-      margin-bottom: -50px;
-    }
-    
-    #logo {
-      height: 60px;
-      width: 60px;
-    }
-    
-    #profile {
-      height: 50px;
-    }
-    #profile img {
-      height: 100%;
-      border-radius: 50%;
-    }
-    
-    
-    .my-activity {
-      background-color: #E7F6F214;
-    }
-    .footer {
-      background-color: #365a64; /* Matches the background color in the image */
-      color: white;
-      padding: 20px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    
-    .footer-content {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      flex-wrap: wrap;
-    }
-    
-    .footer-brand {
-      display: flex;
-      align-items: center;
-    }
-    
-    .footer-logo {
-      border-radius: 50%; /* To make the logo circular */
-      margin-right: 10px;
-    }
-    
-    .footer-brand-name {
-      font-size: 3rem;
-      font-weight: bold;
-    }
-    
-    .footer-contact {
-      text-align: left;
-    }
-    
-    .contact-heading {
-      font-size: 1.2rem;
-      margin: 0;
-    }
-    
-    .contact-email {
-      color: white;
-      text-decoration: none;
-      font-size: 1rem;
-    }
-    
-    .contact-email:hover {
-      text-decoration: underline;
-    }
-    
-    a {
-      color:white;
-    }
-    a:hover {
-      color: #A5C9CA;
-    }
-    main {
-      margin-top:-120px;
-      transform:scale(0.7);
-    }
-    :root {
-      --primary-bg: rgba(44, 51, 51, 1);
-      --secondary-bg: rgba(57, 91, 100, 1);
-      --text-color: rgba(255, 255, 255, 1);
-      --avatar-bg: rgba(217, 217, 217, 1);
-  }
-  .leaderboard {
-    background-color: var(--primary-bg);
-    min-height: 100vh;
-    padding: 1rem;
-}.section-title {
-  font-family: 'Jomhuria', sans-serif;
-  font-size: 8rem;
-  margin: 1rem 0;
-}
-
-.rank-title {
-  font-family: 'Jomhuria', sans-serif;
-  font-size: 4rem;
-  margin: 2rem 0 1rem;
-}
-
-.rank-headers {
-  display: grid;
-  grid-template-columns: 0.5fr 2fr 1fr 1fr;
-  padding: 1rem 4rem;
-  font-family: 'Inder', sans-serif;
-  font-size: 1.5rem;
-}
-
-.rank-item {
-  background-color: var(--secondary-bg);
-  border-radius: 20px;
-  padding: 0.7rem 4rem;
-  margin: 1rem 0;
-  display: grid;
-  grid-template-columns: 0.5fr 2fr 1fr 1fr;
-  align-items: center;
-  font-family: 'Jomhuria', sans-serif;
-  font-size: 4rem;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-  </style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
