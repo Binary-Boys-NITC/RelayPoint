@@ -18,20 +18,25 @@ A comprehensive event management system built for NIT Calicut, designed to strea
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
     <div>
-        <em>Homepage with upcoming events and user dashboard</em>
-        <img src="static/images/screenshot1.png" alt="Homepage">
+        <img src="static/images/screenshot1.png">
     </div>
     <div>
-        <em>Events listing page with filtering options</em>
-        <img src="static/images/screenshot2.png" alt="Events Page">
+        <img src="static/images/screenshot3.png">
     </div>
     <div>
-        <em>Event registration with QR code generation</em>
-        <img src="static/images/screenshot3.png" alt="Event Registration">
+        <img src="static/images/screenshot2.png">
     </div>
     <div>
-        <em>Leaderboard showing participant rankings and points</em>
-        <img src="static/images/screenshot4.png" alt="Leaderboard">
+        <img src="static/images/screenshot4.png">
+    </div>
+    <div>
+        <img src="static/images/screenshot5.png">
+    </div>
+    <div>
+        <img src="static/images/screenshot6.png">
+    </div>
+    <div>
+        <img src="static/images/screenshot7.png">
     </div>
 </div>
 
