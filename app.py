@@ -360,6 +360,12 @@ def make_organizer():
     secret_key=request.cookies.get('secret_key')
     return jsonify(pg.pgMakeOrganizer(request.args.get('user'),username,secret_key))
 
+@app.route('/resetdb',methods=["GET"])
+def resetdb():
+    username=request.cookies.get('username')
+    secret_key=request.cookies.get('secret_key')
+    return  jsonify(pg.pgAdminResetDB(username,secret_key))
+
 @app.route('/test',methods=["GET"])
 def test():
     return render_template('award.html')

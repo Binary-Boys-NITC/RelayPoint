@@ -390,7 +390,17 @@ def resetdb():
     Base.metadata.create_all(engine)
     print("Database has been reset.")
 
-
+def pgAdminResetDB(username,secret_key):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            resetdb()
+            pgCreateUser(admin_username,admin_password,["admin"],"relaypoint_admin@nitc.ac.in")
+            return {"status_code":200,"message":"Ok"}
+        else:
+            return {"status_code":404,"message":"Forbidden"}
+    else:
+        return {"status_code":404,"message":"User not found"}
 try:
     session.query(User).first()
 except Exception as e:
