@@ -269,7 +269,12 @@ def myevents():
 
 @app.route('/about',methods=["GET"])
 def about():
-    return render_template('about.html')
+    username=request.cookies.get('username')
+    if username==None:
+        username="Guest User"
+    return render_template('about.html',
+                           username=username,
+                           profile_link="/myprofile" if username!="Guest User" else "/login",)
 
 @app.route('/community',methods=["GET"])
 def community():

@@ -95,7 +95,7 @@
       </div>
       <div class="container-fluid">
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
-          {% for event in upcoming_events %}
+          {% for event in upcoming_events[:4] %}
           <div class="col">
             <div class="card m-3 h-100">
             <img src="/image/{{event.image_ids[0] if event.image_ids else 0}}" class="card-img-top " alt="...">
@@ -107,7 +107,6 @@
           </div>
           </div>
           {% endfor %}
-          
         </div>
       </div>
     </div>
@@ -133,6 +132,17 @@
         </div>
         <div class="m-3">
           <div class="row row-cols-1 row-cols-md-3 g-4">
+          {% if username=="Guest User" %}
+          <div class="alert alert-info">
+            <h5>No events found</h5>
+            <p>Login to see your registered events</p>
+          </div>
+          {% elif registered_events|length == 0 %}
+          <div class="alert alert-info">
+            <h5>No events found</h5>
+            <p>Register for events to see them here</p>
+          </div>
+          {% else %}
             {% for event in registered_events %}
             <div class="col">
               <div class="card">
@@ -146,7 +156,7 @@
               </div>
             </div>
             {% endfor %}
-            
+          {% endif %}
           </div>
         </div>
       </div>
