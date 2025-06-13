@@ -324,6 +324,31 @@ def pgGetBlogs():
     posts=session.query(Post).all()
     return posts[::-1]
 
+def pgNonAwardedUsers(eventId):
+    event=session.query(Event).filter(Event.id==eventId).first()
+    registered_users=event.registered_users
+    user_stats=session.query(UserStats)
+    non_awarded_users=[]
+    for user in registered_users:
+        points=user_stats.filter(UserStats.username==user).first().points
+        for point in points:
+            if point["event_id"]==eventId:
+                break
+        else:
+            non_awarded_users.append(user)
+
+    return non_awarded_users
+
+def pgAppStats():
+    events=session.query(Event).all()
+    number_of_hackathons=0
+    number_of_tickets=0
+    for event in events:
+        if event.category=="Hackathon":
+            number_of_hackathons+=1
+        number_of_tickets+=len(event.registered_users)
+    return {"events":len(events),"hackathons":number_of_hackathons,"tickets":number_of_tickets}
+
 def resetdb():
     """
     Drops all tables and recreates them from the defined SQLAlchemy models.

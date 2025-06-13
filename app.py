@@ -89,14 +89,16 @@ def index():
                                     attended_events=len(user_stats.events_ids),
                                     upcoming_events=upcoming_events,
                                     registered_events=registered_events,
-                                    latest=latest
+                                    latest=latest,
+                                    app_stats=pg.pgAppStats()
                                     )
     
     return render_template('home.html',
                             username="Guest User",
                             profile_link='/login',
                             latest=latest,
-                            upcoming_events=upcoming_events)
+                            upcoming_events=upcoming_events,
+                            app_stats=pg.pgAppStats())
 
 @app.route('/login',methods=["GET"])
 def login():
@@ -208,7 +210,7 @@ def leaderboard():
     for user in LB:
         user.pointsTotal=pg.pgGetPoints(user.username)
     return render_template('/leaderboard.html',
-                           username=username,profile_url='/myprofile',
+                           username=username,profile_link='/myprofile',
                            myrank=pg.pgGetRank(username),
                            mypoints=pg.pgGetPoints(username), 
                            myworkshops=len(pg.pgGetRecentEvents(username,secret_key)),
@@ -333,9 +335,9 @@ def award(id):
     return render_template('award.html',
                            username=username,
                            profile_link='/myprofile',
-                           registered_users=registered_users,
                            event_id=id,
-                           event=event
+                           event=event,
+                           non_awarded_users=pg.pgNonAwardedUsers(id)
                            )
 
 @app.route('/test',methods=["GET"])
