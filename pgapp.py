@@ -390,6 +390,12 @@ def resetdb():
     Base.metadata.create_all(engine)
     print("Database has been reset.")
 
+
+try:
+    session.query(User).first()
+except Exception as e:
+    resetdb()
+    pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
 if __name__ == "__main__":
     resetdb()
     pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
