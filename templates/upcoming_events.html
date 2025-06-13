@@ -20,6 +20,10 @@
         .card {
           min-width: 270px;
         }
+        .card-img-top{
+          aspect-ratio: 16/9;
+          object-fit: cover;
+        }
     </style>
 </head>
 <body data-bs-theme="dark">
@@ -58,8 +62,8 @@
               <input type="hidden" name="category" value="{{event.category}}">
             <img src="/image/{{event.image_ids[0]}}" class="card-img-top " alt="...">
             <div class="card-body">
-              <h5 class="card-title">{{event.name}}</h5>
-              <p class="card-text">{{event.description}}</p>
+              <h5 class="card-title">{{event.title}}</h5>
+              <p class="card-text">{{event.description[:250]+"..."}}</p>
               <a href="/event/{{event.id}}" class="btn btn-primary m-1">View Event</a>
               <a href="/award/{{event.id}}" class="btn btn-primary m-1">Award Point</a>
               <a href="/participants/{{event.id}}" class="btn btn-primary m-1">Participants (JSON)</a>
@@ -74,8 +78,8 @@
               <input type="hidden" name="category" value="{{event.category}}">
             <img src="/image/{{event.image_ids[0]}}" class="card-img-top " alt="...">
             <div class="card-body">
-              <h5 class="card-title">{{event.name}}</h5>
-              <p class="card-text">{{event.description}}</p>
+              <h5 class="card-title">{{event.title}}</h5>
+              <p class="card-text">{{event.description[:250]+"..."}}</p>
               <a href="/event/{{event.id}}" class="btn btn-primary">View Event</a>
             </div>
           </div>
