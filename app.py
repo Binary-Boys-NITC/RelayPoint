@@ -93,6 +93,12 @@ def index():
                                     latest=latest,
                                     app_stats=pg.pgAppStats()
                                     )
+        else:
+            pg.pgLogout(username,secret_key)
+            response = make_response(redirect('/'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
     
     return render_template('home.html',
                             username="Guest User",
