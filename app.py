@@ -129,6 +129,8 @@ def apiLogin():
 
 @app.route('/api/signup',methods=["POST"])
 def apiSignup():
+    if request.form['password']!=request.form['confirm_password']:
+        return render_template('signup.html',username="Guest User",profile_link='/login',message="Passwords do not match")
     if "@nitc.ac.in" not in request.form['email']:
         return render_template('signup.html',username="Guest User",profile_link='/login',message="Invalid email")
     resp = pg.pgCreateUser(request.form['username'],request.form['password'],['student'],request.form['email'])
