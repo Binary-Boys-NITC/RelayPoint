@@ -360,11 +360,24 @@ def make_organizer():
     secret_key=request.cookies.get('secret_key')
     return jsonify(pg.pgMakeOrganizer(request.args.get('user'),username,secret_key))
 
-@app.route('/resetdb',methods=["GET"])
-def resetdb():
-    username=request.cookies.get('username')
-    secret_key=request.cookies.get('secret_key')
-    return  jsonify(pg.pgAdminResetDB(username,secret_key))
+@app.route('/resetdb', methods=["GET"])
+def resetdb_route():
+    username = request.cookies.get('username')
+    secret_key = request.cookies.get('secret_key')
+    
+    if not username or not secret_key:
+        return jsonify({"status_code": 400, "message": "Missing credentials"})
+    
+    try:
+        result = pg.pgAdminResetDB(username, secret_key)
+        pg.reinitialize_session()
+        response = make_response(redirect('/login'))
+        response.set_cookie('secret_key','',expires=0)
+        response.set_cookie('username','',expires=0)
+        return response
+        
+    except Exception as e:
+        return jsonify({"status_code": 500, "message": f"Server error: {str(e)}"})
 
 @app.route('/test',methods=["GET"])
 def test():

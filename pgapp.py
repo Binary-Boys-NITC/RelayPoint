@@ -382,6 +382,8 @@ def pgMakeOrganizer(organizer,username,secret_key):
         return {"status_code":404,"message":"User not found"}
 
 def resetdb():
+    global session
+    session.close()
     """
     Drops all tables and recreates them from the defined SQLAlchemy models.
     WARNING: This will erase all existing data!
@@ -390,22 +392,90 @@ def resetdb():
     Base.metadata.create_all(engine)
     print("Database has been reset.")
 
+    session = Session()
+
 def pgAdminResetDB(username,secret_key):
-    user = session.query(User).filter(User.username == username).first()
-    if user is not None:
-        if user.secret_key == secret_key and "admin" in user.roles:
-            resetdb()
-            pgCreateUser(admin_username,admin_password,["admin"],"relaypoint_admin@nitc.ac.in")
-            return {"status_code":200,"message":"Ok"}
-        else:
-            return {"status_code":404,"message":"Forbidden"}
-    else:
-        return {"status_code":404,"message":"User not found"}
-try:
-    session.query(User).first()
-except Exception as e:
-    resetdb()
-    pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
+    """
+    Safer version that handles session lifecycle properly.
+    """
+    try:
+        # Create a temporary session for verification
+        temp_session = Session()
+        
+        # Verify admin privileges
+        user = temp_session.query(User).filter(User.username == username).first()
+        if user is None:
+            temp_session.close()
+            return {"status_code": 404, "message": "User not found"}
+        
+        if user.secret_key != secret_key or "admin" not in user.roles:
+            temp_session.close()
+            return {"status_code": 403, "message": "Forbidden"}
+        
+        # Close the temp session
+        temp_session.close()
+        
+        # Close the global session
+        session.close()
+        
+        # Reset database
+        Base.metadata.drop_all(engine)
+        Base.metadata.create_all(engine)
+        
+        # Create new session for admin user creation
+        reset_session = Session()
+        
+        try:
+            # Create admin user
+            admin_user = User(
+                username=admin_username,
+                hashed_password=hasher(admin_password),
+                roles=["admin"],
+                email="relaypoint_admin@nitc.ac.in"
+            )
+            reset_session.add(admin_user)
+            
+            # Create admin stats
+            admin_stats = UserStats(
+                username=admin_username,
+                events_ids=[],
+                created_events_ids=[],
+                points=[]
+            )
+            reset_session.add(admin_stats)
+            
+            reset_session.commit()
+            
+            return {"status_code": 200, "message": "Database reset successfully"}
+            
+        except Exception as e:
+            reset_session.rollback()
+            raise e
+        finally:
+            reset_session.close()
+            
+    except Exception as e:
+        print(f"Error during safe database reset: {e}")
+        return {"status_code": 500, "message": f"Database reset failed: {str(e)}"}
+
+def reinitialize_session():
+    """
+    Reinitialize the global session after database operations.
+    Call this after resetdb if you need to continue using the global session.
+    """
+    global session
+    try:
+        session.close()
+    except:
+        pass  # Session might already be closed
+    
+    session = Session()
+    return session
+# try:
+#     session.query(User).first()
+# except Exception as e:
+#     resetdb()
+#     pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
 if __name__ == "__main__":
     resetdb()
     pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
