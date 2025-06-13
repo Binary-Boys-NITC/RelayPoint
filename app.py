@@ -13,10 +13,10 @@ import pytz
 
 app = Flask(__name__)
 
-def generate_qr(username, event_id):
+def generate_qr(username, event_id, email):
     try:
         # Compact data in JSON format
-        data = json.dumps({"username": username, "event_id": event_id}, separators=(',', ':'))
+        data = json.dumps({"username": username, "event_id": event_id, "email": email}, separators=(',', ':'))
         
         # Generate the QR Code
         qr = qrcode.QRCode(
@@ -358,6 +358,7 @@ def register(id):
     secret_key=request.cookies.get('secret_key')
     if username==None:
         return redirect('/login')
+    email=pg.pgUserFetch(username)['data']['email']
     event=pg.pgGetEvent(id)    
     resp = pg.pgRegisterEvent(username,secret_key,id)
     alreadyRegistered=not(resp['status_code']==200)
@@ -367,7 +368,7 @@ def register(id):
                     profile_link="/myprofile" if username!="Guest User" else "/login",
                     event=event,
                     alreadyRegistered=alreadyRegistered,
-                    qr=generate_qr(username,id),
+                    qr=generate_qr(username,id,email),
                     ical=generate_ical(event)
                     )
 

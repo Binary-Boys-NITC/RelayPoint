@@ -136,7 +136,7 @@ def pgLogout(username:str,secret_key:str):
 def pgUserFetch(username:str):
     user = session.query(User).filter(User.username == username).first()
     if user is not None:
-        return {"status_code":200,"message":"Ok","data":{"username":username,"roles":user.roles}}
+        return {"status_code":200,"message":"Ok","data":{"username":username,"roles":user.roles,"email":user.email}}
     else:
         return {"status_code":404,"message":"User not found"}
 
