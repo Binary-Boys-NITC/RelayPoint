@@ -128,8 +128,13 @@ def apiLogin():
 
 @app.route('/api/signup',methods=["POST"])
 def apiSignup():
-    resp = pg.pgCreateUser(request.form['username'],request.form['password'],['student'])
-    return redirect('/login')
+    if "@nitc.ac.in" not in request.form['email']:
+        return render_template('signup.html',username="Guest User",profile_link='/login',message="Invalid email")
+    resp = pg.pgCreateUser(request.form['username'],request.form['password'],['student'],request.form['email'])
+    if resp['status_code']==200:
+        return redirect('/login')
+    else:
+        return render_template('signup.html',username="Guest User",profile_link='/login',message=resp['message'])
 
 @app.route('/logout',methods=["GET"])
 def logout():
@@ -339,6 +344,20 @@ def award(id):
                            event=event,
                            non_awarded_users=pg.pgNonAwardedUsers(id)
                            )
+
+@app.route('/participants/<int:id>',methods=["GET"])
+def participants(id):
+    username=request.cookies.get('username')
+    secret_key=request.cookies.get('secret_key')
+    if username==None or secret_key==None or not pg.pgAuthorizeCreateEvent(username,secret_key):
+        return redirect('/login')
+    return jsonify(pg.pgGetParticipants(id))
+
+@app.route('/make_organizer',methods=["GET"])
+def make_organizer():
+    username=request.cookies.get('username')
+    secret_key=request.cookies.get('secret_key')
+    return jsonify(pg.pgMakeOrganizer(request.args.get('user'),username,secret_key))
 
 @app.route('/test',methods=["GET"])
 def test():

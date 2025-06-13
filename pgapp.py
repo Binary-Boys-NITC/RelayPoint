@@ -47,9 +47,9 @@ class User(Base):
     __tablename__ = 'users'
     username = Column(String, primary_key=True)
     hashed_password = Column(String)
-    roles = Column(ARRAY(String))
+    roles = Column(MutableList.as_mutable(ARRAY(String)))
     secret_key = Column(String, nullable=True)
-
+    email = Column(String, nullable=True)
 class UserStats(Base):
     __tablename__ = 'user_stats'
     username = Column(String, ForeignKey('users.username'), primary_key=True)
@@ -90,15 +90,19 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-def pgCreateUser(username:str,password:str,roles:list):
+def pgCreateUser(username:str,password:str,roles:list,email:str):
     user = session.query(User).filter(User.username == username).first()
     if user is None:
-        user = User(username=username, hashed_password=hasher(password), roles=roles)
-        session.add(user)
-        user_stats = UserStats(username=username, events_ids=[], created_events_ids=[], points=[])
-        session.add(user_stats)
-        session.commit()
-        return {"status_code":200,"message":"Ok"}
+        user = session.query(User).filter(User.email == email).first()
+        if user is None:
+            user = User(username=username, hashed_password=hasher(password), roles=roles,email=email)
+            session.add(user)
+            user_stats = UserStats(username=username, events_ids=[], created_events_ids=[], points=[])
+            session.add(user_stats)
+            session.commit()
+            return {"status_code":200,"message":"Ok"}
+        else:
+            return {"status_code":409,"message":f"Email \'{email}\' already exists."}
     else:
         return {"status_code":409,"message":f"Username \'{username}\' already exists."}
 
@@ -349,6 +353,34 @@ def pgAppStats():
         number_of_tickets+=len(event.registered_users)
     return {"events":len(events),"hackathons":number_of_hackathons,"tickets":number_of_tickets}
 
+def pgGetParticipants(eventId:int):
+    event=session.query(Event).filter(Event.id==eventId).first()
+    registered_users=event.registered_users
+    users={"participants":[]}
+    for user in registered_users:
+        user_data=session.query(User).filter(User.username==user).first()
+        users["participants"].append({"username":user_data.username,"email":user_data.email})
+    return users
+
+def pgMakeOrganizer(organizer,username,secret_key):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            organizer = session.query(User).filter(User.username == organizer).first()
+            if organizer is not None:
+                if "organizer" not in organizer.roles:
+                    organizer.roles.append("organizer")
+                    session.commit()
+                    return {"status_code":200,"message":"Ok"}
+                else:
+                    return {"status_code":409,"message":"User already an organizer"}
+            else:
+                return {"status_code":404,"message":"User not found"}
+        else:
+            return {"status_code":404,"message":"Forbidden"}
+    else:
+        return {"status_code":404,"message":"User not found"}
+
 def resetdb():
     """
     Drops all tables and recreates them from the defined SQLAlchemy models.
@@ -360,4 +392,4 @@ def resetdb():
 
 if __name__ == "__main__":
     resetdb()
-    pgCreateUser(admin_username,admin_password,["admin"])
+    pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")

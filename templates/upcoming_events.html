@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if my_events is defined %}
+    <title>My Events - RelayPoint</title>
+    {% else %}
     <title>Upcoming Events - RelayPoint</title>
+    {% endif %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
     <style>
         h1{
@@ -56,8 +60,9 @@
             <div class="card-body">
               <h5 class="card-title">{{event.name}}</h5>
               <p class="card-text">{{event.description}}</p>
-              <a href="/event/{{event.id}}" class="btn btn-primary">View Event</a>
-              <a href="/award/{{event.id}}" class="btn btn-primary">Award Point</a>
+              <a href="/event/{{event.id}}" class="btn btn-primary m-1">View Event</a>
+              <a href="/award/{{event.id}}" class="btn btn-primary m-1">Award Point</a>
+              <a href="/participants/{{event.id}}" class="btn btn-primary m-1">Participants (JSON)</a>
             </div>
           </div>
           </div>
