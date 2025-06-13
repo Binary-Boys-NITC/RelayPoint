@@ -7,6 +7,9 @@ import json
 from sqlalchemy import or_, func
 import pgapp as pg
 import os
+from urllib.parse import quote
+from datetime import timedelta
+import pytz
 
 app = Flask(__name__)
 
@@ -37,6 +40,40 @@ def generate_qr(username, event_id):
         return f"data:image/jpeg;base64,{img_base64}"
     except Exception as e:
         return f"Error generating QR code: {str(e)}"
+
+def generate_ical(event):
+    # Format datetime for IST timezone
+    def format_datetime_ist(dt):
+        return dt.strftime('%Y%m%dT%H%M%S')
+    
+    url_encoded = f"""data:text/calendar;charset=utf8,BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//BinaryBoys//RelayPoint//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VTIMEZONE
+TZID:Asia/Kolkata
+BEGIN:STANDARD
+DTSTART:19700101T000000
+TZNAME:IST
+TZOFFSETFROM:+0530
+TZOFFSETTO:+0530
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:{quote(str(event.id)) + quote("@relaypoint.nitc.ac.in")}
+DTSTART;TZID=Asia/Kolkata:{format_datetime_ist(event.date)}
+DTEND;TZID=Asia/Kolkata:{format_datetime_ist(event.date + timedelta(hours=1))}
+DTSTAMP:{datetime.now().strftime('%Y%m%dT%H%M%SZ')}
+SUMMARY:{quote(event.title)}
+DESCRIPTION:{quote(event.description.replace(",", "\\,"))}
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR""".replace("\n", "%0A")
+    
+    return url_encoded
+    
 
 @app.route('/img_upload', methods=['POST'])
 def upload_image():
@@ -321,7 +358,7 @@ def register(id):
     secret_key=request.cookies.get('secret_key')
     if username==None:
         return redirect('/login')
-    event=pg.pgGetEvent(id)     #(id,title,description,category,date,imageids,organizers,access,registered_users)
+    event=pg.pgGetEvent(id)    
     resp = pg.pgRegisterEvent(username,secret_key,id)
     alreadyRegistered=not(resp['status_code']==200)
     
@@ -330,7 +367,8 @@ def register(id):
                     profile_link="/myprofile" if username!="Guest User" else "/login",
                     event=event,
                     alreadyRegistered=alreadyRegistered,
-                    qr=generate_qr(username,id)
+                    qr=generate_qr(username,id),
+                    ical=generate_ical(event)
                     )
 
 @app.route('/api/award',methods=["POST"])

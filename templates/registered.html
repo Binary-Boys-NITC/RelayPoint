@@ -18,9 +18,14 @@
 <body data-bs-theme="dark">
     {% include "navbar.html" %}
     <div class="container">
-        <a href='/'>
-        <button type="button" class="btn btn-primary m-4">Back to Home</button>
-        </a>
+        <div class="d-flex justify-content-between">
+            <a href='/'>
+            <button type="button" class="btn btn-primary m-4">Back to Home</button>
+            </a>
+            {% if alreadyRegistered!=None %}
+            <a href="{{ical}}" download="event_{{event.id}}.ics" class="btn btn-primary m-4">Add to Calendar</a>
+            {% endif %}
+        </div>
 
     <div class="container-fluid">
 
