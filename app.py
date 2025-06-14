@@ -95,6 +95,12 @@ def image(id):
 def index():
     username=request.cookies.get("username")
     secret_key=request.cookies.get("secret_key")
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
     latest=pg.session.query(pg.Event).order_by(pg.Event.date.desc()).all()[:3]
 
     current_datetime = datetime.now()
@@ -234,6 +240,12 @@ def apiCreateEvent():
 def myprofile():
     username=request.cookies.get('username')
     secret_key=request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/myprofile'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
     if username==None:
         return redirect('/login')
     points=pg.pgGetPoints(username)
@@ -255,6 +267,12 @@ def myprofile():
 def leaderboard():
     username = request.cookies.get('username')
     secret_key= request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/leaderboard'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
     if username==None:
         return redirect('/login')
     LB=pg.pgRanklist()
@@ -298,6 +316,12 @@ def events():
 def myevents():
     username=request.cookies.get('username')
     secret_key=request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/myevents'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
     if username==None:
         username="Guest User"
     my_events=[]
@@ -324,6 +348,12 @@ def about():
 @app.route('/community',methods=["GET"])
 def community():
     username=request.cookies.get('username')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/community'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
     if username==None:
         return redirect('/login')
     return render_template('community.html',username=username,profile_link='/myprofile',blogs=pg.pgGetBlogs())
@@ -341,6 +371,12 @@ def post_blog():
 def event(id):
     username=request.cookies.get('username')
     secret_key=request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/event/'+str(id)))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
     if username==None:
         return redirect('/login')
     event=pg.pgGetEvent(id)
@@ -356,6 +392,12 @@ def event(id):
 def register(id):
     username=request.cookies.get('username')
     secret_key=request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/register/'+str(id)))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
     if username==None:
         return redirect('/login')
     email=pg.pgUserFetch(username)['data']['email']
@@ -385,6 +427,12 @@ def apiAward():
 def award(id):
     username=request.cookies.get('username')
     secret_key=request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/award/'+str(id)))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
     registered_users_id=pg.pgGetEvent(id).registered_users
     registered_users=[]
     event=pg.pgGetEvent(id)
@@ -416,6 +464,12 @@ def make_organizer():
 def resetdb_route():
     username = request.cookies.get('username')
     secret_key = request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/resetdb'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
     
     if not username or not secret_key:
         return jsonify({"status_code": 400, "message": "Missing credentials"})
@@ -431,8 +485,5 @@ def resetdb_route():
     except Exception as e:
         return jsonify({"status_code": 500, "message": f"Server error: {str(e)}"})
 
-@app.route('/test',methods=["GET"])
-def test():
-    return render_template('award.html')
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=os.environ.get('PORT',10000),debug=True)

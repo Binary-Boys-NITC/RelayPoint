@@ -156,6 +156,13 @@ def pgUserAddEvents(username:str,secret_key:str,events):
     else:
         return {"status_code":404,"message":"User not found"}
 
+def pgUserAuth(username,secret_key):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key:
+            return True
+    return False
+
 def pgAuthorizeCreateEvent(username,secret_key):
     user = session.query(User).filter(User.username == username).first()
     if user is not None:
