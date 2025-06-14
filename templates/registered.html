@@ -42,6 +42,9 @@
                 <h3>Date: <span class="details">{{"{:02}".format(event.date.day)}}/{{"{:02}".format(event.date.month)}}/{{event.date.year}}</span></h3>
                 <h3>Time: <span class="details">{{"{:02}".format(event.date.hour)}}:{{"{:02}".format(event.date.minute)}}</span></h3>
                 <h3>Category: <span class="details">{{event.category}}</span></h3>
+                {% if event.registration_link and alreadyRegistered!=None %}
+                <a href="{{event.registration_link}}" class="btn btn-primary mt-4">Register link</a>
+                {% endif %}
             </div>
           
         </div>

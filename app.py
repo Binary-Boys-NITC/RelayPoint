@@ -229,7 +229,8 @@ def apiCreateEvent():
                          request.form['category'],
                          date,
                          [image_id],
-                         [request.cookies.get('username')]
+                         [request.cookies.get('username')],
+                         registration_link=request.form['registration_link'] if request.form['registration_link'] else None
                          )
         if resp['status_code']==200:
             return redirect('/')
@@ -405,15 +406,18 @@ def register(id):
     event=pg.pgGetEvent(id)    
     resp = pg.pgRegisterEvent(username,secret_key,id)
     alreadyRegistered=not(resp['status_code']==200)
-    
+    if not alreadyRegistered:
+        if event.registration_link:
+            return redirect(event.registration_link)
+
     return render_template('registered.html',
-                    username=username,
-                    profile_link="/myprofile" if username!="Guest User" else "/login",
-                    event=event,
-                    alreadyRegistered=alreadyRegistered,
-                    qr=generate_qr(username,id,email),
-                    ical=generate_ical(event)
-                    )
+            username=username,
+            profile_link="/myprofile" if username!="Guest User" else "/login",
+            event=event,
+            alreadyRegistered=alreadyRegistered,
+            qr=generate_qr(username,id,email),
+            ical=generate_ical(event)
+            )
 
 @app.route('/api/award',methods=["POST"])
 def apiAward():

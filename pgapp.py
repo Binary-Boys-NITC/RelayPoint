@@ -68,6 +68,7 @@ class Event(Base):
     organizers = Column(ARRAY(String))
     access = Column(ARRAY(String))
     registered_users = Column(MutableList.as_mutable(ARRAY(String))) 
+    registration_link = Column(String)
 
 class Image(Base):
     __tablename__ = 'images'
@@ -171,7 +172,7 @@ def pgAuthorizeCreateEvent(username,secret_key):
                 return True
     return False
   
-def pgCreateEvent(username,title,description,category,date,imageIds=[],organizers=[],access=["all"]):
+def pgCreateEvent(username,title,description,category,date,imageIds=[],organizers=[],access=["all"],registration_link=None):
     date = datetime.datetime(
         year=date["year"],
         month=date["month"],
@@ -183,7 +184,7 @@ def pgCreateEvent(username,title,description,category,date,imageIds=[],organizer
     if event is not None:
         return {"status_code":409,"message":f"Event \'{title}\' already exists."}
     else:
-        event = Event(title=title,description=description,category=category,date=date,image_ids=imageIds,organizers=organizers,access=access,registered_users=[])
+        event = Event(title=title,description=description,category=category,date=date,image_ids=imageIds,organizers=organizers,access=access,registered_users=[],registration_link=registration_link)
         session.add(event)
         session.commit()
         eventid = event.id
