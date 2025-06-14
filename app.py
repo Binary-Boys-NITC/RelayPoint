@@ -132,7 +132,7 @@ def index():
                                     rank=pg.pgGetRank(username),
                                     attended_events=len(user_stats.events_ids),
                                     upcoming_events=upcoming_events,
-                                    registered_events=registered_events,
+                                    registered_events=registered_events[::-1],
                                     latest=latest,
                                     app_stats=pg.pgAppStats()
                                     )
@@ -348,6 +348,7 @@ def about():
 @app.route('/community',methods=["GET"])
 def community():
     username=request.cookies.get('username')
+    secret_key=request.cookies.get('secret_key')
     if username!=None:
         if not pg.pgUserAuth(username,secret_key):
             response = make_response(redirect('/community'))
