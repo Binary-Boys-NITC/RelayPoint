@@ -10,106 +10,58 @@
             margin: 20px;
         }
         .details{
-            font-weight: lighter;
+            font-weight: 400;
 
         }
     </style>
 </head>
 <body data-bs-theme="dark">
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-      <div class="container-fluid">
-    <a class="navbar-brand" href="#">
-      <img src="./images/logo.png" alt="" width="50" height="50">
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Events</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Leaderboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Community</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Workshops</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">About us</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Create Event</a>
-        </li>
-      </ul>
-      <form class="d-flex" role="search">
-        <button class="btn btn-outline-primary" type="submit">Login</button>
-        <button class="btn btn-outline-primary mx-3" type="submit">Sign Up</button>
-      </form>
+    {% include "navbar.html" %}
+    <div class="container">
+        <div class="d-flex justify-content-between">
+            <a href='/'>
+            <button type="button" class="btn btn-primary m-4">Back to Home</button>
+            </a>
+            {% if alreadyRegistered!=None %}
+            <a href="{{ical}}" download="event_{{event.id}}.ics" class="btn btn-primary m-4">Add to Calendar</a>
+            {% endif %}
         </div>
-        </div>
-    </nav>
 
-    <button type="button" class="btn btn-primary m-4">Back</button>
     <div class="container-fluid">
+
+        {% if alreadyRegistered==False %}
         <h1>Thank You For Registering!</h1>
+        {% elif alreadyRegistered==None %}
+        {% else %}
+        <h1>You are already registered for this event!</h1>
+        {% endif %}
         <div class="row">
-            <img src="./images/img1.jpg" class="img-fluid col-md-6" style="border-radius: 30px;">
+            <img src="/image/{{event.image_ids[0]}}" class="img-fluid col-md-6" style="border-radius: 30px;">
             <div class="col-md-6 my-3">
-                <h3>Event Name: <span class="details">First Last</span></h3>
-                <h3>Date: <span class="details">NIL</span></h3>
-                <h3>Time: <span class="details">NIL</span></h3>
-                <h3>Category: <span class="details">NIL</span></h3>
+                <h3>Event Name: <span class="details">{{event.title}}</span></h3>
+                <h3>Date: <span class="details">{{"{:02}".format(event.date.day)}}/{{"{:02}".format(event.date.month)}}/{{event.date.year}}</span></h3>
+                <h3>Time: <span class="details">{{"{:02}".format(event.date.hour)}}:{{"{:02}".format(event.date.minute)}}</span></h3>
+                <h3>Category: <span class="details">{{event.category}}</span></h3>
             </div>
           
         </div>
     </div>
       <div class="container-fluid">
-            <p class="col-md-9 my-3">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi laoreet non mi vel tincidunt. Nam consectetur, sem sed interdum facilisis, massa diam sodales nisi, eu vehicula neque urna ac nunc. Vestibulum ac ipsum feugiat, tincidunt augue a, dignissim nisl. Nullam sed efficitur velit, eu sodales mauris. Fusce nulla arcu, euismod id erat id, dictum malesuada massa. Nunc ullamcorper lacus eget justo venenatis, sit amet lobortis dolor egestas. Vivamus sagittis, lectus at gravida bibendum, libero ligula gravida nibh, in fringilla augue mi sit amet leo. Duis vel erat erat. Phasellus ut porttitor tellus, in dignissim velit.</p>
+            <p class="col-md-9 my-3">{{event.description}}</p>
+            {% if alreadyRegistered==None %}
+            <a href='/register/{{event.id}}'>
+            <button type="button" class="btn btn-primary m-4">Register</button>
+            </a>
+            {% else %}
             <div class="img-fluid col-md-6 m-3">
                 <h6>Your Ticket:</h6>
-                <img src=".//images/qr_code_PNG7.png" style="height: 150px; width: 150px;">
+                <img loading="lazy" src="{{qr}}" style="height: 150px; width: 150px;">
             </div>
+            {% endif %}
         </div>
-    
-
-  <div class="container-fluid">
-    <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
-      
-      <p class="col-md-4 mb-0 text-body-secondary">© 2025 RelayPoint, Inc</p>
-      
-      <a href="/" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none" aria-label="Bootstrap">
-        <svg class="bi me-2" width="40" height="32" aria-hidden="true">
-          <use xlink:href="#bootstrap"></use>
-        </svg>
-      </a>
-      
-      <ul class="nav col-md-4 justify-content-end">
-        <li class="nav-item">
-          <a href="#" class="nav-link px-2 text-body-secondary">Home</a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link px-2 text-body-secondary">Features</a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link px-2 text-body-secondary">Pricing</a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link px-2 text-body-secondary">FAQs</a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link px-2 text-body-secondary">About</a>
-        </li>
-      </ul>
-      
-    </footer>
-  </div>
+      </div>
+  
+    {% include 'footer.html' %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
 </body>

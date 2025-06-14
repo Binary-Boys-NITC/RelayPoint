@@ -47,9 +47,9 @@ class User(Base):
     __tablename__ = 'users'
     username = Column(String, primary_key=True)
     hashed_password = Column(String)
-    roles = Column(ARRAY(String))
+    roles = Column(MutableList.as_mutable(ARRAY(String)))
     secret_key = Column(String, nullable=True)
-
+    email = Column(String, nullable=True)
 class UserStats(Base):
     __tablename__ = 'user_stats'
     username = Column(String, ForeignKey('users.username'), primary_key=True)
@@ -90,15 +90,19 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-def pgCreateUser(username:str,password:str,roles:list):
+def pgCreateUser(username:str,password:str,roles:list,email:str):
     user = session.query(User).filter(User.username == username).first()
     if user is None:
-        user = User(username=username, hashed_password=hasher(password), roles=roles)
-        session.add(user)
-        user_stats = UserStats(username=username, events_ids=[], created_events_ids=[], points=[])
-        session.add(user_stats)
-        session.commit()
-        return {"status_code":200,"message":"Ok"}
+        user = session.query(User).filter(User.email == email).first()
+        if user is None:
+            user = User(username=username, hashed_password=hasher(password), roles=roles,email=email)
+            session.add(user)
+            user_stats = UserStats(username=username, events_ids=[], created_events_ids=[], points=[])
+            session.add(user_stats)
+            session.commit()
+            return {"status_code":200,"message":"Ok"}
+        else:
+            return {"status_code":409,"message":f"Email \'{email}\' already exists."}
     else:
         return {"status_code":409,"message":f"Username \'{username}\' already exists."}
 
@@ -132,7 +136,7 @@ def pgLogout(username:str,secret_key:str):
 def pgUserFetch(username:str):
     user = session.query(User).filter(User.username == username).first()
     if user is not None:
-        return {"status_code":200,"message":"Ok","data":{"username":username,"roles":user.roles}}
+        return {"status_code":200,"message":"Ok","data":{"username":username,"roles":user.roles,"email":user.email}}
     else:
         return {"status_code":404,"message":"User not found"}
 
@@ -151,6 +155,13 @@ def pgUserAddEvents(username:str,secret_key:str,events):
             return {"status_code":404,"message":"Forbidden"}
     else:
         return {"status_code":404,"message":"User not found"}
+
+def pgUserAuth(username,secret_key):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key:
+            return True
+    return False
 
 def pgAuthorizeCreateEvent(username,secret_key):
     user = session.query(User).filter(User.username == username).first()
@@ -324,7 +335,62 @@ def pgGetBlogs():
     posts=session.query(Post).all()
     return posts[::-1]
 
+def pgNonAwardedUsers(eventId):
+    event=session.query(Event).filter(Event.id==eventId).first()
+    registered_users=event.registered_users
+    user_stats=session.query(UserStats)
+    non_awarded_users=[]
+    for user in registered_users:
+        points=user_stats.filter(UserStats.username==user).first().points
+        for point in points:
+            if point["event_id"]==eventId:
+                break
+        else:
+            non_awarded_users.append(user)
+
+    return non_awarded_users
+
+def pgAppStats():
+    events=session.query(Event).all()
+    number_of_hackathons=0
+    number_of_tickets=0
+    for event in events:
+        if event.category=="Hackathon":
+            number_of_hackathons+=1
+        number_of_tickets+=len(event.registered_users)
+    return {"events":len(events),"hackathons":number_of_hackathons,"tickets":number_of_tickets}
+
+def pgGetParticipants(eventId:int):
+    event=session.query(Event).filter(Event.id==eventId).first()
+    registered_users=event.registered_users
+    users={"participants":[]}
+    for user in registered_users:
+        user_data=session.query(User).filter(User.username==user).first()
+        users["participants"].append({"username":user_data.username,"email":user_data.email})
+    return users
+
+def pgMakeOrganizer(organizer,username,secret_key):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            organizer = session.query(User).filter(User.username == organizer).first()
+            if organizer is not None:
+                if "organizer" not in organizer.roles:
+                    organizer.roles.append("organizer")
+                    session.commit()
+                    return {"status_code":200,"message":"Ok"}
+                else:
+                    return {"status_code":409,"message":"User already an organizer"}
+            else:
+                return {"status_code":404,"message":"User not found"}
+        else:
+            return {"status_code":404,"message":"Forbidden"}
+    else:
+        return {"status_code":404,"message":"User not found"}
+
 def resetdb():
+    global session
+    session.close()
     """
     Drops all tables and recreates them from the defined SQLAlchemy models.
     WARNING: This will erase all existing data!
@@ -333,6 +399,90 @@ def resetdb():
     Base.metadata.create_all(engine)
     print("Database has been reset.")
 
+    session = Session()
+
+def pgAdminResetDB(username,secret_key):
+    """
+    Safer version that handles session lifecycle properly.
+    """
+    try:
+        # Create a temporary session for verification
+        temp_session = Session()
+        
+        # Verify admin privileges
+        user = temp_session.query(User).filter(User.username == username).first()
+        if user is None:
+            temp_session.close()
+            return {"status_code": 404, "message": "User not found"}
+        
+        if user.secret_key != secret_key or "admin" not in user.roles:
+            temp_session.close()
+            return {"status_code": 403, "message": "Forbidden"}
+        
+        # Close the temp session
+        temp_session.close()
+        
+        # Close the global session
+        session.close()
+        
+        # Reset database
+        Base.metadata.drop_all(engine)
+        Base.metadata.create_all(engine)
+        
+        # Create new session for admin user creation
+        reset_session = Session()
+        
+        try:
+            # Create admin user
+            admin_user = User(
+                username=admin_username,
+                hashed_password=hasher(admin_password),
+                roles=["admin"],
+                email="relaypoint_admin@nitc.ac.in"
+            )
+            reset_session.add(admin_user)
+            
+            # Create admin stats
+            admin_stats = UserStats(
+                username=admin_username,
+                events_ids=[],
+                created_events_ids=[],
+                points=[]
+            )
+            reset_session.add(admin_stats)
+            
+            reset_session.commit()
+            
+            return {"status_code": 200, "message": "Database reset successfully"}
+            
+        except Exception as e:
+            reset_session.rollback()
+            raise e
+        finally:
+            reset_session.close()
+            
+    except Exception as e:
+        print(f"Error during safe database reset: {e}")
+        return {"status_code": 500, "message": f"Database reset failed: {str(e)}"}
+
+def reinitialize_session():
+    """
+    Reinitialize the global session after database operations.
+    Call this after resetdb if you need to continue using the global session.
+    """
+    global session
+    try:
+        session.close()
+    except:
+        pass  # Session might already be closed
+    
+    session = Session()
+    return session
+# try:
+#     session.query(User).first()
+# except Exception as e:
+#     resetdb()
+#     pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
 if __name__ == "__main__":
     resetdb()
-    pgCreateUser(admin_username,admin_password,["admin"])
+    pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
