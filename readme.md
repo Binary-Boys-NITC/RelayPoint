@@ -5,12 +5,11 @@ A comprehensive event management system built for NIT Calicut, designed to strea
 ## Features
 
 - User authentication and role-based access control
-- Event creation and management
+- Event creation and management (get list of participants with ease)
 - Event registration with QR code generation
 - Points system for event participation
 - Leaderboard for tracking participant rankings
 - Community blog section
-- Workshop management
 - Image upload and management
 - Responsive web interface
 
@@ -90,7 +89,6 @@ A comprehensive event management system built for NIT Calicut, designed to strea
 - Admin: Full system access
 - Organizer: Can create and manage events
 - Student: Can register for events and participate
-- FOSSCell Member: Special access to certain features
 
 ## Database Schema
 
