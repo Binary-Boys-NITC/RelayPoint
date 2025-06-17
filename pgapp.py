@@ -210,6 +210,22 @@ def pgRegisterEvent(username,secret_key,eventid):
     else:
         return {"status_code":404,"message":"Forbidden"}
 
+def pgNonAwardedUsers(eventId):
+    event=session.query(Event).filter(Event.id==eventId).first()
+    registered_users=event.registered_users
+    user_stats=session.query(UserStats)
+    non_awarded_users=[]
+    for user in registered_users:
+        points=user_stats.filter(UserStats.username==user).first().points
+        for point in points:
+            if point["event_id"]==eventId:
+                break
+        else:
+            non_awarded_users.append(user)
+
+    return non_awarded_users
+
+
 def pgAwardPoints(organizerUsername,secret_key,studentUsername,eventId,points):
     user = session.query(User).filter(User.username == organizerUsername).first()
     if user is not None:
@@ -222,12 +238,13 @@ def pgAwardPoints(organizerUsername,secret_key,studentUsername,eventId,points):
                 if organizerUsername in organizers or "admin" in roles:
                     user_stats = session.query(UserStats).filter(UserStats.username == studentUsername).first()
                     if user_stats is not None:
-                        if {"event_id":int(eventId),"points":int(points)} not in user_stats.points:
+                        for point in user_stats.points:
+                            if point["event_id"]==eventId:
+                                break
+                        else:
                             user_stats.points.append({"event_id":int(eventId),"points":int(points)})
                             session.commit()
                             return {"status_code":200,"message":"Ok"}
-                        else:
-                            return {"status_code":409,"message":f"Event \'{eventId}\' already awarded."}
                     else:
                         return {"status_code":404,"message":"User not found"}
                 else:
@@ -236,7 +253,33 @@ def pgAwardPoints(organizerUsername,secret_key,studentUsername,eventId,points):
                 return {"status_code":404,"message":"User not an Organizer"}
     else:
         return {"status_code":404,"message":"Forbidden"}
-    
+
+def pgAwardAllPoints(organizerUsername,secret_key,eventId,points):
+    user = session.query(User).filter(User.username == organizerUsername).first()
+    if user is not None:
+        if user.secret_key == secret_key:
+            roles=pgUserFetch(organizerUsername)["data"]["roles"]
+
+            if "organizer" in roles or "admin" in roles:
+                non_awarded_users=pgNonAwardedUsers(eventId)
+                for user in non_awarded_users:
+                    user_stats = session.query(UserStats).filter(UserStats.username == user).first()
+                    if user_stats is not None:
+                        for point in user_stats.points:
+                            if point["event_id"]==eventId:
+                                break
+                        else:
+                            user_stats.points.append({"event_id":int(eventId),"points":int(points)})
+                            session.commit()
+                else:
+                    return {"status_code":200,"message":"Ok"}
+            else:
+                return {"status_code":404,"message":"Event not Organized by User"}
+        else:
+            return {"status_code":404,"message":"Forbidden"}
+    else:
+        return {"status_code":404,"message":"Forbidden"}
+
 def pgAddOrganizers(creatorUsername,secret_key,eventId,organizers:list):
     user = session.query(User).filter(User.username == creatorUsername).first()
     if user is not None:
@@ -335,21 +378,6 @@ def pgPostBlog(username,secret_key,blog,time):
 def pgGetBlogs():
     posts=session.query(Post).all()
     return posts[::-1]
-
-def pgNonAwardedUsers(eventId):
-    event=session.query(Event).filter(Event.id==eventId).first()
-    registered_users=event.registered_users
-    user_stats=session.query(UserStats)
-    non_awarded_users=[]
-    for user in registered_users:
-        points=user_stats.filter(UserStats.username==user).first().points
-        for point in points:
-            if point["event_id"]==eventId:
-                break
-        else:
-            non_awarded_users.append(user)
-
-    return non_awarded_users
 
 def pgAppStats():
     events=session.query(Event).all()

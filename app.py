@@ -406,9 +406,10 @@ def register(id):
     event=pg.pgGetEvent(id)    
     resp = pg.pgRegisterEvent(username,secret_key,id)
     alreadyRegistered=not(resp['status_code']==200)
-    if not alreadyRegistered:
-        if event.registration_link:
-            return redirect(event.registration_link)
+    if event.registration_link:
+        registration_link = event.registration_link
+    else:
+        registration_link = None
 
     return render_template('registered.html',
             username=username,
@@ -416,7 +417,8 @@ def register(id):
             event=event,
             alreadyRegistered=alreadyRegistered,
             qr=generate_qr(username,id,email),
-            ical=generate_ical(event)
+            ical=generate_ical(event),
+            registration_link=registration_link
             )
 
 @app.route('/api/award',methods=["POST"])
@@ -426,6 +428,15 @@ def apiAward():
     if username==None:
         return redirect('/login')
     resp = pg.pgAwardPoints(username,secret_key,request.form['student-name'],request.form['event-id'],request.form['points'])
+    return redirect('/award/'+str(request.form['event-id']))
+
+@app.route('/api/award_all',methods=["POST"])
+def apiAwardAll():
+    username=request.cookies.get('username')
+    secret_key=request.cookies.get('secret_key')
+    if username==None:
+        return redirect('/login')
+    pg.pgAwardAllPoints(username,secret_key,request.form['event-id'],request.form['points'])
     return redirect('/award/'+str(request.form['event-id']))
 
 @app.route('/award/<int:id>',methods=["GET"])
