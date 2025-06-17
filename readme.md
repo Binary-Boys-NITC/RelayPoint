@@ -59,6 +59,7 @@ A comprehensive event management system built for NIT Calicut, designed to strea
    HASH_KEY=your_hash_key
    ADMIN_USERNAME=your_admin_username
    ADMIN_PASSWORD=your_admin_password
+   PORT=5000
    ```
 
 3. Create and activate a virtual environment:
