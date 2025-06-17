@@ -9,7 +9,6 @@ import pgapp as pg
 import os
 from urllib.parse import quote
 from datetime import timedelta
-import pytz
 
 app = Flask(__name__)
 
@@ -75,16 +74,6 @@ END:VCALENDAR""".replace("\n", "%0A")
     return url_encoded
     
 
-@app.route('/img_upload', methods=['POST'])
-def upload_image():
-    uploaded_file = request.files['image']
-    binary_data=uploaded_file.read()
-    mimetype = uploaded_file.mimetype
-    image = pg.Image(data=binary_data, mime_type=mimetype)
-    pg.session.add(image)
-    pg.session.commit()
-    image_id = image.id
-    return {"status_code":200,"message":"Ok","id":image_id}
     
 @app.route('/image/<int:id>',methods=["GET"])
 def image(id):
@@ -210,9 +199,9 @@ def createEvent():
 
 @app.route('/api/create_event',methods=["POST"])
 def apiCreateEvent():
-    binary_data=request.files['image'].read()
-    mimetype=request.files['image'].mimetype
-    image_id=pg.pgUploadImage(binary_data,mimetype)
+    
+    image_id = pg.pgUploadImage(request.files['image'])
+
     formdate=request.form['date']
     if pg.pgAuthorizeCreateEvent(request.cookies.get('username'),request.cookies.get('secret_key')):
         #formdate is 2025-06-17 12:00

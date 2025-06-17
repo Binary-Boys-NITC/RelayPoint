@@ -6,6 +6,8 @@ import base64
 import datetime
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.mutable import MutableList
+from PIL import Image as PILImage
+import io
 def binary_to_base64(binary_data, mime_type):
     # Encode binary data to Base64
     base64_data = base64.b64encode(binary_data).decode('utf-8')
@@ -346,8 +348,22 @@ def pgGetEvent(id:int):
     event = session.query(Event).filter(Event.id == id).first()
     return event
 
-def pgUploadImage(data,mime_type):
-    image = Image(data=data,mime_type=mime_type)
+def pgUploadImage(image):
+    img = PILImage.open(image.stream)
+    
+    if img.mode in ('RGBA', 'LA', 'P'):
+        img = img.convert('RGB')
+    
+    max_size = (1200, 800)
+    img.thumbnail(max_size, PILImage.Resampling.LANCZOS)
+    
+    output = io.BytesIO()
+    img.save(output, format='JPEG', quality=85, optimize=True) 
+    binary_data = output.getvalue()
+    
+    mimetype = 'image/jpeg'
+    
+    image = Image(data=binary_data,mime_type=mimetype)
     session.add(image)
     session.commit()
     return image.id
