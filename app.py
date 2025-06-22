@@ -187,15 +187,21 @@ def logout():
 
 @app.route('/create_event',methods=['GET'])
 def createEvent():
-    if request.cookies.get('username')!=None:
-        roles=pg.pgUserFetch(request.cookies.get('username'))["data"]["roles"]
-        if "organizer" in roles or "admin" in roles:
-            return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=True)
-        else:
-            return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=False)
-        
-    else:
+    username=request.cookies.get('username')
+    secret_key=request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/create_event'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
+    if username==None:
         return redirect('/login')
+    
+    if pg.pgAuthorizeCreateEvent(username,secret_key):
+        return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=True)
+    else:
+        return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=False)
 
 @app.route('/api/create_event',methods=["POST"])
 def apiCreateEvent():
@@ -459,11 +465,12 @@ def participants(id):
         return redirect('/login')
     return jsonify(pg.pgGetParticipants(id))
 
-@app.route('/make_organizer',methods=["GET"])
+@app.route('/make_organizer',methods=["POST"])
 def make_organizer():
     username=request.cookies.get('username')
     secret_key=request.cookies.get('secret_key')
-    return jsonify(pg.pgMakeOrganizer(request.args.get('user'),username,secret_key))
+    
+    return jsonify(pg.pgMakeOrganizer(request.form['username'],username,secret_key))
 
 @app.route('/resetdb', methods=["GET"])
 def resetdb_route():
@@ -489,6 +496,30 @@ def resetdb_route():
         
     except Exception as e:
         return jsonify({"status_code": 500, "message": f"Server error: {str(e)}"})
+
+@app.route('/admin/import_db',methods=["POST"])
+def import_db():
+    return jsonify(pg.pgImportDB(request.form['username'],request.form['secret_key'],json.loads(request.files['import_file'].read())))
+
+@app.route('/admin/export_db',methods=["GET"])
+def export_db():
+    return jsonify(pg.pgExportDB(request.cookies.get('username'),request.cookies.get('secret_key')))
+
+@app.route('/admin',methods=["GET"])
+def adminpage():
+    username = request.cookies.get('username')
+    secret_key = request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/resetdb'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
+    if username==None:
+        return redirect('/login')
+    if "admin" not in pg.pgUserFetch(username)['data']['roles']:
+        return redirect('/')
+    return render_template('admin.html',username=username,secret_key=secret_key,profile_link='/myprofile')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=os.environ.get('PORT',10000),debug=True)

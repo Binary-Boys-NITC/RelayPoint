@@ -6,8 +6,13 @@ import base64
 import datetime
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 from PIL import Image as PILImage
 import io
+import json
+from datetime import datetime
+
 def binary_to_base64(binary_data, mime_type):
     # Encode binary data to Base64
     base64_data = base64.b64encode(binary_data).decode('utf-8')
@@ -523,11 +528,216 @@ def reinitialize_session():
     
     session = Session()
     return session
-# try:
-#     session.query(User).first()
-# except Exception as e:
-#     resetdb()
-#     pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
+
+def export_to_json(session):
+    """
+    Export database data to JSON format
+    Note: Binary data (images) will be base64 encoded
+    """
+    export_data = {
+        'status_code': 200,
+        'message': 'Database exported successfully',
+        'users': [],
+        'user_stats': [],
+        'events': [],
+        'images': [],
+        'posts': [],
+        'export_timestamp': datetime.now().isoformat()
+    }
+    
+    # Export Users
+    users = session.query(User).all()
+    for user in users:
+        export_data['users'].append({
+            'username': user.username,
+            'hashed_password': user.hashed_password,
+            'roles': user.roles,
+            'secret_key': user.secret_key,
+            'email': user.email
+        })
+    
+    # Export UserStats
+    user_stats = session.query(UserStats).all()
+    for stat in user_stats:
+        export_data['user_stats'].append({
+            'username': stat.username,
+            'events_ids': stat.events_ids,
+            'created_events_ids': stat.created_events_ids,
+            'points': stat.points
+        })
+    
+    # Export Events
+    events = session.query(Event).all()
+    for event in events:
+        export_data['events'].append({
+            'id': event.id,
+            'title': event.title,
+            'description': event.description,
+            'category': event.category,
+            'date': event.date.isoformat() if event.date else None,
+            'image_ids': event.image_ids,
+            'organizers': event.organizers,
+            'access': event.access,
+            'registered_users': event.registered_users,
+            'registration_link': event.registration_link
+        })
+    
+    # Export Images (with base64 encoding)
+    images = session.query(Image).all()
+    for image in images:
+        export_data['images'].append({
+            'id': image.id,
+            'data': binary_to_base64(image.data, image.mime_type) if image.data else None,
+            'mime_type': image.mime_type
+        })
+    
+    # Export Posts
+    posts = session.query(Post).all()
+    for post in posts:
+        export_data['posts'].append({
+            'id': post.id,
+            'username': post.username,
+            'blog': post.blog,
+            'date': post.date.isoformat() if post.date else None
+        })
+    
+    return export_data
+
+def import_from_json(import_data, clear_existing=False):
+    """
+    Import database data from JSON format
+    """
+
+    if clear_existing:
+        session.close()
+        Base.metadata.drop_all(engine)
+        Base.metadata.create_all(engine)
+        reset_session = Session()
+        
+        try:
+            # Create admin user
+            admin_user = User(
+                username=admin_username,
+                hashed_password=hasher(admin_password),
+                roles=["admin"],
+                email="relaypoint_admin@nitc.ac.in"
+            )
+            reset_session.add(admin_user)
+            
+            # Create admin stats
+            admin_stats = UserStats(
+                username=admin_username,
+                events_ids=[],
+                created_events_ids=[],
+                points=[]
+            )
+            reset_session.add(admin_stats)
+            reset_session.commit()
+
+        except Exception as e:
+            reset_session.rollback()
+            raise e
+        finally:
+            reset_session.close()
+        reinitialize_session()
+    try:
+        # Import Users
+        for user_data in import_data['users']:
+            user = User(
+                username=user_data['username'],
+                hashed_password=user_data['hashed_password'],
+                roles=user_data['roles'],
+                secret_key=user_data['secret_key'],
+                email=user_data['email']
+            )
+            session.merge(user)  # Use merge to handle duplicates
+        
+        # Import UserStats
+        for stat_data in import_data['user_stats']:
+            stat = UserStats(
+                username=stat_data['username'],
+                events_ids=stat_data['events_ids'],
+                created_events_ids=stat_data['created_events_ids'],
+                points=stat_data['points']
+            )
+            session.merge(stat)
+        
+        # Import Events
+        for event_data in import_data['events']:
+            event = Event(
+                id=event_data['id'],
+                title=event_data['title'],
+                description=event_data['description'],
+                category=event_data['category'],
+                date=datetime.fromisoformat(event_data['date']) if event_data['date'] else None,
+                image_ids=event_data['image_ids'],
+                organizers=event_data['organizers'],
+                access=event_data['access'],
+                registered_users=event_data['registered_users'],
+                registration_link=event_data['registration_link']
+            )
+            session.merge(event)
+        
+        # Import Images
+        for image_data in import_data['images']:
+            if image_data['data']:
+                # Convert base64 back to binary
+                data_uri = image_data['data']
+                if data_uri.startswith('data:'):
+                    base64_data = data_uri.split(',')[1]
+                    binary_data = base64.b64decode(base64_data)
+                else:
+                    binary_data = base64.b64decode(image_data['data'])
+            else:
+                binary_data = None
+                
+            image = Image(
+                id=image_data['id'],
+                data=binary_data,
+                mime_type=image_data['mime_type']
+            )
+            session.merge(image)
+        
+        # Import Posts
+        for post_data in import_data['posts']:
+            post = Post(
+                id=post_data['id'],
+                username=post_data['username'],
+                blog=post_data['blog'],
+                date=datetime.fromisoformat(post_data['date']) if post_data['date'] else None
+            )
+            session.merge(post)
+        
+        session.commit()
+        return {"status_code": 200, "message": "Database imported successfully"}
+    except Exception as e:
+        print(e)
+        return {"status_code": 500, "message": f"Error during database import: {e}"}
+
+def pgExportDB(username,secret_key):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            export_data = export_to_json(session)
+            return export_data
+        else:
+            return {"status_code": 403, "message": "Forbidden"}
+    else:
+        return {"status_code": 404, "message": "User not found"}
+
+def pgImportDB(username,secret_key,import_data,clear_existing=False):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            if import_from_json(import_data,clear_existing)['status_code'] == 200:
+                return {"status_code": 200, "message": "Database imported successfully"}
+            else:
+                return {"status_code": 500, "message": "Error during database import"}
+        else:
+            return {"status_code": 403, "message": "Forbidden"}
+    else:
+        return {"status_code": 404, "message": "User not found"}
+
 if __name__ == "__main__":
     resetdb()
     pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
