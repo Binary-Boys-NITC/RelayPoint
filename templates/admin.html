@@ -56,9 +56,9 @@
           </div>
         </div>
         <div class="d-flex justify-content-center my-5">
-          <h1>Whatsapp- New Events</h1>
+          <h1>Whatsapp- New Events (<span id="new_events_count">0</span>)</h1>
         </div>
-        <div id="new_events" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+        <div id="new_events" class="row row-cols-sm-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-2">
           <!-- Event cards will be dynamically inserted here -->
         </div>
     </div>
@@ -176,9 +176,12 @@
       const username = '{{ username }}';
       const secret_key = '{{ secret_key }}';
       const response = await fetch(`/admin/whatsapp_events?username=${encodeURIComponent(username)}&secret_key=${encodeURIComponent(secret_key)}`);
-      const events = await response.json();
+      const result = await response.json();
+      const events = result.data.results;
+      const count = result.data.count;
       const container = document.getElementById('new_events');
       container.innerHTML = '';
+      document.getElementById('new_events_count').textContent = count;
       if (!Array.isArray(events) || events.length === 0) {
         container.innerHTML = '<div class="col"><div class="alert alert-info">No new WhatsApp events.</div></div>';
         return;
@@ -193,11 +196,11 @@
             <div class="card-body">
               <h5 class="card-title">${event.title}</h5>
               <h6>${event.date}</h6>
-              <p class="card-text">${event.description}</p>
+              <p class="card-text">${event.description.slice(0, 200)}...</p>
               <div class="d-flex flex-row gap-2">
-                <button class="btn btn-primary m-1 copy-image-btn" data-image-id="${event.image_id}">Copy Image</button>
                 <button class="btn btn-primary m-1 copy-desc-btn" data-id="${event.id}" data-title="${event.title}" data-desc="${event.description.replace(/\"/g, '&quot;')}" data-date="${event.date}" data-image_id="${event.image_id}">Copy Description</button>
-              </div>
+                <button class="btn btn-primary m-1 copy-image-btn" data-image-id="${event.image_id}">Copy Image</button>
+                </div>
               <button class="btn btn-success m-1 mark-sent-btn" data-event-id="${event.id}">Mark as Sent</button>
             </div>
           </div>

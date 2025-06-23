@@ -484,7 +484,7 @@ def resetdb_route():
             return response
     
     if not username or not secret_key:
-        return jsonify({"status_code": 400, "message": "Missing credentials"})
+        return redirect('/login')
     
     try:
         result = pg.pgAdminResetDB(username, secret_key)

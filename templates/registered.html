@@ -50,7 +50,7 @@
         </div>
     </div>
       <div class="container-fluid">
-            <p class="col-md-9 my-3">{{event.description}}</p>
+            <p class="col-md-9 my-3">{{ event.description.replace('\n', '<br>') | safe }}</p>
             {% if alreadyRegistered==None %}
             <a href='/register/{{event.id}}'>
             <button type="button" class="btn btn-primary m-4">Register</button>

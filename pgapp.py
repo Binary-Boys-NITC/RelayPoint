@@ -7,7 +7,7 @@ import datetime
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, Boolean
+from sqlalchemy import create_engine, Boolean, text
 from PIL import Image as PILImage
 import io
 import json
@@ -452,7 +452,7 @@ def pgWhatsappEvents(username,secret_key):
                     "description":event.description,
                     "date":event.date.strftime("%d %b %Y"),
                     "image_id":event.image_ids[0]})
-            return result
+            return {"status_code":200,"message":"Ok","data":{"count":len(events),"results":result}}
         else:
             return {"status_code":404,"message":"Forbidden"}
     else:
@@ -761,11 +761,32 @@ def pgExportDB(username,secret_key):
     else:
         return {"status_code": 404, "message": "User not found"}
 
+def reset_all_sequences():
+    """Reset all auto-increment sequences after database import"""
+    
+    sequences = [
+        "SELECT setval('images_id_seq', (SELECT MAX(id) FROM images));",
+        "SELECT setval('events_id_seq', (SELECT MAX(id) FROM events));", 
+        "SELECT setval('posts_id_seq', (SELECT MAX(id) FROM posts));"
+    ]
+    
+    for seq_query in sequences:
+        try:
+            result = session.execute(text(seq_query))
+            new_val = result.scalar()  # Get the returned value
+            table_name = seq_query.split("'")[1].replace('_id_seq', '')
+            print(f"Reset {table_name} sequence to: {new_val}")
+        except Exception as e:
+            print(f"Error resetting sequence: {seq_query} - {e}")
+    
+    session.commit()
+
 def pgImportDB(username,secret_key,import_data,clear_existing=False):
     user = session.query(User).filter(User.username == username).first()
     if user is not None:
         if user.secret_key == secret_key and "admin" in user.roles:
             if import_from_json(import_data,clear_existing)['status_code'] == 200:
+                reset_all_sequences()
                 return {"status_code": 200, "message": "Database imported successfully"}
             else:
                 return {"status_code": 500, "message": "Error during database import"}
