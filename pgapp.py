@@ -209,7 +209,13 @@ def pgRegisterEvent(username,secret_key,eventid):
         event = session.query(Event).filter(Event.id == eventid).first()
         registered_users=event.registered_users
         if username  in registered_users:
-            return {"status_code":409,"message":f"Event \'{eventid}\' already registered."}
+            user_stats = session.query(UserStats).filter(UserStats.username == username).first()
+            if eventid in user_stats.events_ids:
+                return {"status_code":409,"message":f"Event \'{eventid}\' already registered."}
+            else:
+                user_stats.events_ids.append(eventid)
+                session.commit()
+                return {"status_code":200,"message":"Ok"}
         else:
             event.registered_users.append(username)
             user_stats = session.query(UserStats).filter(UserStats.username == username).first()
@@ -615,7 +621,8 @@ def export_to_json(session):
             'organizers': event.organizers,
             'access': event.access,
             'registered_users': event.registered_users,
-            'registration_link': event.registration_link
+            'registration_link': event.registration_link,
+            'whatsapp_sent': event.whatsapp_sent
         })
     
     # Export Images (with base64 encoding)

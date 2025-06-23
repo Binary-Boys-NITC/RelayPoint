@@ -197,11 +197,11 @@
               <h5 class="card-title">${event.title}</h5>
               <h6>${event.date}</h6>
               <p class="card-text">${event.description.slice(0, 200)}...</p>
-              <div class="d-flex flex-row gap-2">
-                <button class="btn btn-primary m-1 copy-desc-btn" data-id="${event.id}" data-title="${event.title}" data-desc="${event.description.replace(/\"/g, '&quot;')}" data-date="${event.date}" data-image_id="${event.image_id}">Copy Description</button>
-                <button class="btn btn-primary m-1 copy-image-btn" data-image-id="${event.image_id}">Copy Image</button>
+              <div class="d-flex flex-row gap-1 mb-1">
+                <button class="btn btn-primary copy-desc-btn" data-id="${event.id}" data-title="${event.title}" data-desc="${event.description.replace(/\"/g, '&quot;')}" data-date="${event.date}" data-image_id="${event.image_id}">Copy Description</button>
+                <button class="btn btn-primary copy-image-btn" data-image-id="${event.image_id}">Copy Image</button>
                 </div>
-              <button class="btn btn-success m-1 mark-sent-btn" data-event-id="${event.id}">Mark as Sent</button>
+              <button class="btn btn-success mark-sent-btn w-100" data-event-id="${event.id}">Mark as Sent</button>
             </div>
           </div>
         `;
