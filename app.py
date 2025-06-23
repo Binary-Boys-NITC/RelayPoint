@@ -521,5 +521,33 @@ def adminpage():
         return redirect('/')
     return render_template('admin.html',username=username,secret_key=secret_key,profile_link='/myprofile')
 
+@app.route('/admin/whatsapp_events',methods=["GET"])
+def whatsapp_events():
+    username = request.args.get('username')
+    secret_key = request.args.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/admin/whatsapp_events'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
+    if username==None:
+        return redirect('/login')
+    return jsonify(pg.pgWhatsappEvents(username,secret_key))
+
+@app.route('/admin/sent_whatsapp_event/<int:id>',methods=["GET"])
+def sent_whatsapp_event(id):
+    username = request.args.get('username')
+    secret_key = request.args.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/admin/sent_whatsapp_event/'+str(id)))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
+    if username==None:
+        return redirect('/login')
+    return jsonify(pg.pgSentWhatsappEvent(username,secret_key,id))
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=os.environ.get('PORT',10000),debug=True)

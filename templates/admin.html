@@ -55,7 +55,13 @@
             </form>
           </div>
         </div>
-
+        <div class="d-flex justify-content-center my-5">
+          <h1>Whatsapp- New Events</h1>
+        </div>
+        <div id="new_events" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+          <!-- Event cards will be dynamically inserted here -->
+        </div>
+    </div>
     <!--Footer-->
     {% include 'footer.html' %}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -164,6 +170,107 @@
       } catch (error) {
         showResponse(`Error: ${error.message}`, false);
       }
+    });
+
+    async function fetchUnsentEvents() {
+      const username = '{{ username }}';
+      const secret_key = '{{ secret_key }}';
+      const response = await fetch(`/admin/whatsapp_events?username=${encodeURIComponent(username)}&secret_key=${encodeURIComponent(secret_key)}`);
+      const events = await response.json();
+      const container = document.getElementById('new_events');
+      container.innerHTML = '';
+      if (!Array.isArray(events) || events.length === 0) {
+        container.innerHTML = '<div class="col"><div class="alert alert-info">No new WhatsApp events.</div></div>';
+        return;
+      }
+      for (const event of events) {
+        const card = document.createElement('div');
+        card.className = 'col';
+        card.innerHTML = `
+          <div class="card m-3 h-100">
+            <input type="hidden" name="category" value="${event.category}">
+            <img src="/image/${event.image_id}" class="card-img-top" alt="..." data-image-id="${event.image_id}">
+            <div class="card-body">
+              <h5 class="card-title">${event.title}</h5>
+              <h6>${event.date}</h6>
+              <p class="card-text">${event.description}</p>
+              <div class="d-flex flex-row gap-2">
+                <button class="btn btn-primary m-1 copy-image-btn" data-image-id="${event.image_id}">Copy Image</button>
+                <button class="btn btn-primary m-1 copy-desc-btn" data-id="${event.id}" data-title="${event.title}" data-desc="${event.description.replace(/\"/g, '&quot;')}" data-date="${event.date}" data-image_id="${event.image_id}">Copy Description</button>
+              </div>
+              <button class="btn btn-success m-1 mark-sent-btn" data-event-id="${event.id}">Mark as Sent</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+    async function copyImage(imageId) {
+    const response = await fetch(`/image/${imageId}`);
+    const blob = await response.blob();
+    
+    // Convert to PNG using canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    return new Promise((resolve, reject) => {
+      img.onload = async () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        canvas.toBlob(async (pngBlob) => {
+          const data = [new ClipboardItem({ 'image/png': pngBlob })];
+          try {
+            await navigator.clipboard.write(data);
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        }, 'image/png');
+      };
+      
+      img.onerror = reject;
+      img.src = URL.createObjectURL(blob);
+    });
+  }
+    // Copy description to clipboard
+    function copyDescription(id,title,desc,date) {
+      message="*"+title+"*\n\n"+"Date: "+date+"\n\n"+desc+"\n\n"+"Register here: https://relaypoint.onrender.com/event/"+id;
+      navigator.clipboard.writeText(message);
+    }
+
+    // Mark event as sent
+    async function markAsSent(eventId) {
+      const username = '{{ username }}';
+      const secret_key = '{{ secret_key }}';
+      await fetch(`/admin/sent_whatsapp_event/${eventId}?username=${encodeURIComponent(username)}&secret_key=${encodeURIComponent(secret_key)}`);
+      await fetchUnsentEvents();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchUnsentEvents();
+      document.getElementById('new_events').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('copy-image-btn')) {
+          const imageId = e.target.getAttribute('data-image-id');
+          await copyImage(imageId);
+          e.target.textContent = 'Copied!';
+          setTimeout(() => e.target.textContent = 'Copy Image', 1000);
+        } else if (e.target.classList.contains('copy-desc-btn')) {
+          const id = e.target.getAttribute('data-id');
+          const title = e.target.getAttribute('data-title');
+          const desc = e.target.getAttribute('data-desc');
+          const date = e.target.getAttribute('data-date');
+          const image_id = e.target.getAttribute('data-image_id');
+          copyDescription(id,title,desc,date,image_id);
+          e.target.textContent = 'Copied!';
+          setTimeout(() => e.target.textContent = 'Copy Description', 1000);
+        } else if (e.target.classList.contains('mark-sent-btn')) {
+          const eventId = e.target.getAttribute('data-event-id');
+          await markAsSent(eventId);
+        }
+      });
     });
   </script>
 </body>

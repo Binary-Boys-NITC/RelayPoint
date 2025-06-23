@@ -7,7 +7,7 @@ import datetime
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, Boolean
 from PIL import Image as PILImage
 import io
 import json
@@ -77,6 +77,7 @@ class Event(Base):
     access = Column(ARRAY(String))
     registered_users = Column(MutableList.as_mutable(ARRAY(String))) 
     registration_link = Column(String)
+    whatsapp_sent = Column(Boolean,default=False)
 
 class Image(Base):
     __tablename__ = 'images'
@@ -181,7 +182,7 @@ def pgAuthorizeCreateEvent(username,secret_key):
     return False
   
 def pgCreateEvent(username,title,description,category,date,imageIds=[],organizers=[],access=["all"],registration_link=None):
-    date = datetime.datetime(
+    date = datetime(
         year=date["year"],
         month=date["month"],
         day=date["day"],
@@ -434,6 +435,40 @@ def pgMakeOrganizer(organizer,username,secret_key):
                     return {"status_code":409,"message":"User already an organizer"}
             else:
                 return {"status_code":404,"message":"User not found"}
+        else:
+            return {"status_code":404,"message":"Forbidden"}
+    else:
+        return {"status_code":404,"message":"User not found"}
+def pgWhatsappEvents(username,secret_key):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            events=session.query(Event).filter(Event.whatsapp_sent==False).all()
+            result=[]
+            for event in events[:4]:
+                result.append({
+                    "id":event.id,
+                    "title":event.title,
+                    "description":event.description,
+                    "date":event.date.strftime("%d %b %Y"),
+                    "image_id":event.image_ids[0]})
+            return result
+        else:
+            return {"status_code":404,"message":"Forbidden"}
+    else:
+        return {"status_code":404,"message":"User not found"}
+
+def pgSentWhatsappEvent(username,secret_key,id):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            event=session.query(Event).filter(Event.id==id).first()
+            if event is not None:
+                event.whatsapp_sent=True
+                session.commit()
+                return {"status_code":200,"message":"Ok"}
+            else:
+                return {"status_code":404,"message":"Event not found"}
         else:
             return {"status_code":404,"message":"Forbidden"}
     else:
