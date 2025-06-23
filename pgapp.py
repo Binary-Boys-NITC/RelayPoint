@@ -27,6 +27,7 @@ database_url=os.getenv("DB_URL")
 hash_key=os.getenv("HASH_KEY")
 admin_username=os.getenv("ADMIN_USERNAME")
 admin_password=os.getenv("ADMIN_PASSWORD")
+admin_email=os.getenv("ADMIN_EMAIL")
 
 def hasher(password: str) -> str:
     """
@@ -488,7 +489,7 @@ def pgAdminResetDB(username,secret_key):
                 username=admin_username,
                 hashed_password=hasher(admin_password),
                 roles=["admin"],
-                email="relaypoint_admin@nitc.ac.in"
+                email=admin_email
             )
             reset_session.add(admin_user)
             
@@ -620,7 +621,7 @@ def import_from_json(import_data, clear_existing=False):
                 username=admin_username,
                 hashed_password=hasher(admin_password),
                 roles=["admin"],
-                email="relaypoint_admin@nitc.ac.in"
+                email=admin_email
             )
             reset_session.add(admin_user)
             
@@ -740,4 +741,4 @@ def pgImportDB(username,secret_key,import_data,clear_existing=False):
 
 if __name__ == "__main__":
     resetdb()
-    pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
+    pgCreateUser(admin_username,admin_password,["admin"],admin_email)
