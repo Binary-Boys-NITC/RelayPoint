@@ -549,5 +549,9 @@ def sent_whatsapp_event(id):
         return redirect('/login')
     return jsonify(pg.pgSentWhatsappEvent(username,secret_key,id))
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('notfound.html')
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=os.environ.get('PORT',10000),debug=True)
