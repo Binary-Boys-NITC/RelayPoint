@@ -9,7 +9,6 @@ import pgapp as pg
 import os
 from urllib.parse import quote
 from datetime import timedelta
-import pytz
 
 app = Flask(__name__)
 
@@ -75,16 +74,6 @@ END:VCALENDAR""".replace("\n", "%0A")
     return url_encoded
     
 
-@app.route('/img_upload', methods=['POST'])
-def upload_image():
-    uploaded_file = request.files['image']
-    binary_data=uploaded_file.read()
-    mimetype = uploaded_file.mimetype
-    image = pg.Image(data=binary_data, mime_type=mimetype)
-    pg.session.add(image)
-    pg.session.commit()
-    image_id = image.id
-    return {"status_code":200,"message":"Ok","id":image_id}
     
 @app.route('/image/<int:id>',methods=["GET"])
 def image(id):
@@ -180,7 +169,7 @@ def apiLogin():
 def apiSignup():
     if request.form['password']!=request.form['confirm_password']:
         return render_template('signup.html',username="Guest User",profile_link='/login',message="Passwords do not match")
-    if "@nitc.ac.in" not in request.form['email']:
+    if os.getenv('EMAIL_DOMAIN','@nitc.ac.in') not in request.form['email']:
         return render_template('signup.html',username="Guest User",profile_link='/login',message="Invalid email")
     resp = pg.pgCreateUser(request.form['username'],request.form['password'],['student'],request.form['email'])
     if resp['status_code']==200:
@@ -198,21 +187,27 @@ def logout():
 
 @app.route('/create_event',methods=['GET'])
 def createEvent():
-    if request.cookies.get('username')!=None:
-        roles=pg.pgUserFetch(request.cookies.get('username'))["data"]["roles"]
-        if "organizer" in roles or "admin" in roles:
-            return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=True)
-        else:
-            return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=False)
-        
-    else:
+    username=request.cookies.get('username')
+    secret_key=request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/create_event'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
+    if username==None:
         return redirect('/login')
+    
+    if pg.pgAuthorizeCreateEvent(username,secret_key):
+        return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=True)
+    else:
+        return render_template('create_event.html',username=request.cookies.get("username"),profile_link='/myprofile',auth=False)
 
 @app.route('/api/create_event',methods=["POST"])
 def apiCreateEvent():
-    binary_data=request.files['image'].read()
-    mimetype=request.files['image'].mimetype
-    image_id=pg.pgUploadImage(binary_data,mimetype)
+    
+    image_id = pg.pgUploadImage(request.files['image'])
+
     formdate=request.form['date']
     if pg.pgAuthorizeCreateEvent(request.cookies.get('username'),request.cookies.get('secret_key')):
         #formdate is 2025-06-17 12:00
@@ -229,7 +224,8 @@ def apiCreateEvent():
                          request.form['category'],
                          date,
                          [image_id],
-                         [request.cookies.get('username')]
+                         [request.cookies.get('username')],
+                         registration_link=request.form['registration_link'] if request.form['registration_link'] else None
                          )
         if resp['status_code']==200:
             return redirect('/')
@@ -405,15 +401,20 @@ def register(id):
     event=pg.pgGetEvent(id)    
     resp = pg.pgRegisterEvent(username,secret_key,id)
     alreadyRegistered=not(resp['status_code']==200)
-    
+    if event.registration_link:
+        registration_link = event.registration_link
+    else:
+        registration_link = None
+
     return render_template('registered.html',
-                    username=username,
-                    profile_link="/myprofile" if username!="Guest User" else "/login",
-                    event=event,
-                    alreadyRegistered=alreadyRegistered,
-                    qr=generate_qr(username,id,email),
-                    ical=generate_ical(event)
-                    )
+            username=username,
+            profile_link="/myprofile" if username!="Guest User" else "/login",
+            event=event,
+            alreadyRegistered=alreadyRegistered,
+            qr=generate_qr(username,id,email),
+            ical=generate_ical(event),
+            registration_link=registration_link
+            )
 
 @app.route('/api/award',methods=["POST"])
 def apiAward():
@@ -422,6 +423,15 @@ def apiAward():
     if username==None:
         return redirect('/login')
     resp = pg.pgAwardPoints(username,secret_key,request.form['student-name'],request.form['event-id'],request.form['points'])
+    return redirect('/award/'+str(request.form['event-id']))
+
+@app.route('/api/award_all',methods=["POST"])
+def apiAwardAll():
+    username=request.cookies.get('username')
+    secret_key=request.cookies.get('secret_key')
+    if username==None:
+        return redirect('/login')
+    pg.pgAwardAllPoints(username,secret_key,request.form['event-id'],request.form['points'])
     return redirect('/award/'+str(request.form['event-id']))
 
 @app.route('/award/<int:id>',methods=["GET"])
@@ -455,11 +465,12 @@ def participants(id):
         return redirect('/login')
     return jsonify(pg.pgGetParticipants(id))
 
-@app.route('/make_organizer',methods=["GET"])
+@app.route('/make_organizer',methods=["POST"])
 def make_organizer():
     username=request.cookies.get('username')
     secret_key=request.cookies.get('secret_key')
-    return jsonify(pg.pgMakeOrganizer(request.args.get('user'),username,secret_key))
+    
+    return jsonify(pg.pgMakeOrganizer(request.form['username'],username,secret_key))
 
 @app.route('/resetdb', methods=["GET"])
 def resetdb_route():
@@ -473,7 +484,7 @@ def resetdb_route():
             return response
     
     if not username or not secret_key:
-        return jsonify({"status_code": 400, "message": "Missing credentials"})
+        return redirect('/login')
     
     try:
         result = pg.pgAdminResetDB(username, secret_key)
@@ -485,6 +496,62 @@ def resetdb_route():
         
     except Exception as e:
         return jsonify({"status_code": 500, "message": f"Server error: {str(e)}"})
+
+@app.route('/admin/import_db',methods=["POST"])
+def import_db():
+    return jsonify(pg.pgImportDB(request.form['username'],request.form['secret_key'],json.loads(request.files['import_file'].read())))
+
+@app.route('/admin/export_db',methods=["GET"])
+def export_db():
+    return jsonify(pg.pgExportDB(request.cookies.get('username'),request.cookies.get('secret_key')))
+
+@app.route('/admin',methods=["GET"])
+def adminpage():
+    username = request.cookies.get('username')
+    secret_key = request.cookies.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/resetdb'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
+    if username==None:
+        return redirect('/login')
+    if "admin" not in pg.pgUserFetch(username)['data']['roles']:
+        return redirect('/')
+    return render_template('admin.html',username=username,secret_key=secret_key,profile_link='/myprofile')
+
+@app.route('/admin/whatsapp_events',methods=["GET"])
+def whatsapp_events():
+    username = request.args.get('username')
+    secret_key = request.args.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/admin/whatsapp_events'))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
+    if username==None:
+        return redirect('/login')
+    return jsonify(pg.pgWhatsappEvents(username,secret_key))
+
+@app.route('/admin/sent_whatsapp_event/<int:id>',methods=["GET"])
+def sent_whatsapp_event(id):
+    username = request.args.get('username')
+    secret_key = request.args.get('secret_key')
+    if username!=None:
+        if not pg.pgUserAuth(username,secret_key):
+            response = make_response(redirect('/admin/sent_whatsapp_event/'+str(id)))
+            response.set_cookie('secret_key','',expires=0)
+            response.set_cookie('username','',expires=0)
+            return response
+    if username==None:
+        return redirect('/login')
+    return jsonify(pg.pgSentWhatsappEvent(username,secret_key,id))
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('notfound.html')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=os.environ.get('PORT',10000),debug=True)

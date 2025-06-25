@@ -6,6 +6,13 @@ import base64
 import datetime
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, Boolean, text
+from PIL import Image as PILImage
+import io
+import json
+from datetime import datetime
+
 def binary_to_base64(binary_data, mime_type):
     # Encode binary data to Base64
     base64_data = base64.b64encode(binary_data).decode('utf-8')
@@ -20,6 +27,7 @@ database_url=os.getenv("DB_URL")
 hash_key=os.getenv("HASH_KEY")
 admin_username=os.getenv("ADMIN_USERNAME")
 admin_password=os.getenv("ADMIN_PASSWORD")
+admin_email=os.getenv("ADMIN_EMAIL")
 
 def hasher(password: str) -> str:
     """
@@ -68,6 +76,8 @@ class Event(Base):
     organizers = Column(ARRAY(String))
     access = Column(ARRAY(String))
     registered_users = Column(MutableList.as_mutable(ARRAY(String))) 
+    registration_link = Column(String)
+    whatsapp_sent = Column(Boolean,default=False)
 
 class Image(Base):
     __tablename__ = 'images'
@@ -171,8 +181,8 @@ def pgAuthorizeCreateEvent(username,secret_key):
                 return True
     return False
   
-def pgCreateEvent(username,title,description,category,date,imageIds=[],organizers=[],access=["all"]):
-    date = datetime.datetime(
+def pgCreateEvent(username,title,description,category,date,imageIds=[],organizers=[],access=["all"],registration_link=None):
+    date = datetime(
         year=date["year"],
         month=date["month"],
         day=date["day"],
@@ -183,7 +193,7 @@ def pgCreateEvent(username,title,description,category,date,imageIds=[],organizer
     if event is not None:
         return {"status_code":409,"message":f"Event \'{title}\' already exists."}
     else:
-        event = Event(title=title,description=description,category=category,date=date,image_ids=imageIds,organizers=organizers,access=access,registered_users=[])
+        event = Event(title=title,description=description,category=category,date=date,image_ids=imageIds,organizers=organizers,access=access,registered_users=[],registration_link=registration_link)
         session.add(event)
         session.commit()
         eventid = event.id
@@ -199,7 +209,13 @@ def pgRegisterEvent(username,secret_key,eventid):
         event = session.query(Event).filter(Event.id == eventid).first()
         registered_users=event.registered_users
         if username  in registered_users:
-            return {"status_code":409,"message":f"Event \'{eventid}\' already registered."}
+            user_stats = session.query(UserStats).filter(UserStats.username == username).first()
+            if eventid in user_stats.events_ids:
+                return {"status_code":409,"message":f"Event \'{eventid}\' already registered."}
+            else:
+                user_stats.events_ids.append(eventid)
+                session.commit()
+                return {"status_code":200,"message":"Ok"}
         else:
             event.registered_users.append(username)
             user_stats = session.query(UserStats).filter(UserStats.username == username).first()
@@ -208,6 +224,22 @@ def pgRegisterEvent(username,secret_key,eventid):
             return {"status_code":200,"message":"Ok"}
     else:
         return {"status_code":404,"message":"Forbidden"}
+
+def pgNonAwardedUsers(eventId):
+    event=session.query(Event).filter(Event.id==eventId).first()
+    registered_users=event.registered_users
+    user_stats=session.query(UserStats)
+    non_awarded_users=[]
+    for user in registered_users:
+        points=user_stats.filter(UserStats.username==user).first().points
+        for point in points:
+            if point["event_id"]==eventId:
+                break
+        else:
+            non_awarded_users.append(user)
+
+    return non_awarded_users
+
 
 def pgAwardPoints(organizerUsername,secret_key,studentUsername,eventId,points):
     user = session.query(User).filter(User.username == organizerUsername).first()
@@ -221,12 +253,13 @@ def pgAwardPoints(organizerUsername,secret_key,studentUsername,eventId,points):
                 if organizerUsername in organizers or "admin" in roles:
                     user_stats = session.query(UserStats).filter(UserStats.username == studentUsername).first()
                     if user_stats is not None:
-                        if {"event_id":int(eventId),"points":int(points)} not in user_stats.points:
+                        for point in user_stats.points:
+                            if point["event_id"]==eventId:
+                                break
+                        else:
                             user_stats.points.append({"event_id":int(eventId),"points":int(points)})
                             session.commit()
                             return {"status_code":200,"message":"Ok"}
-                        else:
-                            return {"status_code":409,"message":f"Event \'{eventId}\' already awarded."}
                     else:
                         return {"status_code":404,"message":"User not found"}
                 else:
@@ -235,7 +268,33 @@ def pgAwardPoints(organizerUsername,secret_key,studentUsername,eventId,points):
                 return {"status_code":404,"message":"User not an Organizer"}
     else:
         return {"status_code":404,"message":"Forbidden"}
-    
+
+def pgAwardAllPoints(organizerUsername,secret_key,eventId,points):
+    user = session.query(User).filter(User.username == organizerUsername).first()
+    if user is not None:
+        if user.secret_key == secret_key:
+            roles=pgUserFetch(organizerUsername)["data"]["roles"]
+
+            if "organizer" in roles or "admin" in roles:
+                non_awarded_users=pgNonAwardedUsers(eventId)
+                for user in non_awarded_users:
+                    user_stats = session.query(UserStats).filter(UserStats.username == user).first()
+                    if user_stats is not None:
+                        for point in user_stats.points:
+                            if point["event_id"]==eventId:
+                                break
+                        else:
+                            user_stats.points.append({"event_id":int(eventId),"points":int(points)})
+                            session.commit()
+                else:
+                    return {"status_code":200,"message":"Ok"}
+            else:
+                return {"status_code":404,"message":"Event not Organized by User"}
+        else:
+            return {"status_code":404,"message":"Forbidden"}
+    else:
+        return {"status_code":404,"message":"Forbidden"}
+
 def pgAddOrganizers(creatorUsername,secret_key,eventId,organizers:list):
     user = session.query(User).filter(User.username == creatorUsername).first()
     if user is not None:
@@ -302,8 +361,22 @@ def pgGetEvent(id:int):
     event = session.query(Event).filter(Event.id == id).first()
     return event
 
-def pgUploadImage(data,mime_type):
-    image = Image(data=data,mime_type=mime_type)
+def pgUploadImage(image):
+    img = PILImage.open(image.stream)
+    
+    if img.mode in ('RGBA', 'LA', 'P'):
+        img = img.convert('RGB')
+    
+    max_size = (1200, 800)
+    img.thumbnail(max_size, PILImage.Resampling.LANCZOS)
+    
+    output = io.BytesIO()
+    img.save(output, format='JPEG', quality=85, optimize=True) 
+    binary_data = output.getvalue()
+    
+    mimetype = 'image/jpeg'
+    
+    image = Image(data=binary_data,mime_type=mimetype)
     session.add(image)
     session.commit()
     return image.id
@@ -334,21 +407,6 @@ def pgPostBlog(username,secret_key,blog,time):
 def pgGetBlogs():
     posts=session.query(Post).all()
     return posts[::-1]
-
-def pgNonAwardedUsers(eventId):
-    event=session.query(Event).filter(Event.id==eventId).first()
-    registered_users=event.registered_users
-    user_stats=session.query(UserStats)
-    non_awarded_users=[]
-    for user in registered_users:
-        points=user_stats.filter(UserStats.username==user).first().points
-        for point in points:
-            if point["event_id"]==eventId:
-                break
-        else:
-            non_awarded_users.append(user)
-
-    return non_awarded_users
 
 def pgAppStats():
     events=session.query(Event).all()
@@ -383,6 +441,40 @@ def pgMakeOrganizer(organizer,username,secret_key):
                     return {"status_code":409,"message":"User already an organizer"}
             else:
                 return {"status_code":404,"message":"User not found"}
+        else:
+            return {"status_code":404,"message":"Forbidden"}
+    else:
+        return {"status_code":404,"message":"User not found"}
+def pgWhatsappEvents(username,secret_key):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            events=session.query(Event).filter(Event.whatsapp_sent==False).all()
+            result=[]
+            for event in events[:4]:
+                result.append({
+                    "id":event.id,
+                    "title":event.title,
+                    "description":event.description,
+                    "date":event.date.strftime("%d %b %Y"),
+                    "image_id":event.image_ids[0]})
+            return {"status_code":200,"message":"Ok","data":{"count":len(events),"results":result}}
+        else:
+            return {"status_code":404,"message":"Forbidden"}
+    else:
+        return {"status_code":404,"message":"User not found"}
+
+def pgSentWhatsappEvent(username,secret_key,id):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            event=session.query(Event).filter(Event.id==id).first()
+            if event is not None:
+                event.whatsapp_sent=True
+                session.commit()
+                return {"status_code":200,"message":"Ok"}
+            else:
+                return {"status_code":404,"message":"Event not found"}
         else:
             return {"status_code":404,"message":"Forbidden"}
     else:
@@ -438,7 +530,7 @@ def pgAdminResetDB(username,secret_key):
                 username=admin_username,
                 hashed_password=hasher(admin_password),
                 roles=["admin"],
-                email="relaypoint_admin@nitc.ac.in"
+                email=admin_email
             )
             reset_session.add(admin_user)
             
@@ -478,11 +570,238 @@ def reinitialize_session():
     
     session = Session()
     return session
-# try:
-#     session.query(User).first()
-# except Exception as e:
-#     resetdb()
-#     pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
+
+def export_to_json(session):
+    """
+    Export database data to JSON format
+    Note: Binary data (images) will be base64 encoded
+    """
+    export_data = {
+        'status_code': 200,
+        'message': 'Database exported successfully',
+        'users': [],
+        'user_stats': [],
+        'events': [],
+        'images': [],
+        'posts': [],
+        'export_timestamp': datetime.now().isoformat()
+    }
+    
+    # Export Users
+    users = session.query(User).all()
+    for user in users:
+        export_data['users'].append({
+            'username': user.username,
+            'hashed_password': user.hashed_password,
+            'roles': user.roles,
+            'secret_key': user.secret_key,
+            'email': user.email
+        })
+    
+    # Export UserStats
+    user_stats = session.query(UserStats).all()
+    for stat in user_stats:
+        export_data['user_stats'].append({
+            'username': stat.username,
+            'events_ids': stat.events_ids,
+            'created_events_ids': stat.created_events_ids,
+            'points': stat.points
+        })
+    
+    # Export Events
+    events = session.query(Event).all()
+    for event in events:
+        export_data['events'].append({
+            'id': event.id,
+            'title': event.title,
+            'description': event.description,
+            'category': event.category,
+            'date': event.date.isoformat() if event.date else None,
+            'image_ids': event.image_ids,
+            'organizers': event.organizers,
+            'access': event.access,
+            'registered_users': event.registered_users,
+            'registration_link': event.registration_link,
+            'whatsapp_sent': event.whatsapp_sent
+        })
+    
+    # Export Images (with base64 encoding)
+    images = session.query(Image).all()
+    for image in images:
+        export_data['images'].append({
+            'id': image.id,
+            'data': binary_to_base64(image.data, image.mime_type) if image.data else None,
+            'mime_type': image.mime_type
+        })
+    
+    # Export Posts
+    posts = session.query(Post).all()
+    for post in posts:
+        export_data['posts'].append({
+            'id': post.id,
+            'username': post.username,
+            'blog': post.blog,
+            'date': post.date.isoformat() if post.date else None
+        })
+    
+    return export_data
+
+def import_from_json(import_data, clear_existing=False):
+    """
+    Import database data from JSON format
+    """
+
+    if clear_existing:
+        session.close()
+        Base.metadata.drop_all(engine)
+        Base.metadata.create_all(engine)
+        reset_session = Session()
+        
+        try:
+            # Create admin user
+            admin_user = User(
+                username=admin_username,
+                hashed_password=hasher(admin_password),
+                roles=["admin"],
+                email=admin_email
+            )
+            reset_session.add(admin_user)
+            
+            # Create admin stats
+            admin_stats = UserStats(
+                username=admin_username,
+                events_ids=[],
+                created_events_ids=[],
+                points=[]
+            )
+            reset_session.add(admin_stats)
+            reset_session.commit()
+
+        except Exception as e:
+            reset_session.rollback()
+            raise e
+        finally:
+            reset_session.close()
+        reinitialize_session()
+    try:
+        # Import Users
+        for user_data in import_data['users']:
+            user = User(
+                username=user_data['username'],
+                hashed_password=user_data['hashed_password'],
+                roles=user_data['roles'],
+                secret_key=user_data['secret_key'],
+                email=user_data['email']
+            )
+            session.merge(user)  # Use merge to handle duplicates
+        
+        # Import UserStats
+        for stat_data in import_data['user_stats']:
+            stat = UserStats(
+                username=stat_data['username'],
+                events_ids=stat_data['events_ids'],
+                created_events_ids=stat_data['created_events_ids'],
+                points=stat_data['points']
+            )
+            session.merge(stat)
+        
+        # Import Events
+        for event_data in import_data['events']:
+            event = Event(
+                id=event_data['id'],
+                title=event_data['title'],
+                description=event_data['description'],
+                category=event_data['category'],
+                date=datetime.fromisoformat(event_data['date']) if event_data['date'] else None,
+                image_ids=event_data['image_ids'],
+                organizers=event_data['organizers'],
+                access=event_data['access'],
+                registered_users=event_data['registered_users'],
+                registration_link=event_data['registration_link']
+            )
+            session.merge(event)
+        
+        # Import Images
+        for image_data in import_data['images']:
+            if image_data['data']:
+                # Convert base64 back to binary
+                data_uri = image_data['data']
+                if data_uri.startswith('data:'):
+                    base64_data = data_uri.split(',')[1]
+                    binary_data = base64.b64decode(base64_data)
+                else:
+                    binary_data = base64.b64decode(image_data['data'])
+            else:
+                binary_data = None
+                
+            image = Image(
+                id=image_data['id'],
+                data=binary_data,
+                mime_type=image_data['mime_type']
+            )
+            session.merge(image)
+        
+        # Import Posts
+        for post_data in import_data['posts']:
+            post = Post(
+                id=post_data['id'],
+                username=post_data['username'],
+                blog=post_data['blog'],
+                date=datetime.fromisoformat(post_data['date']) if post_data['date'] else None
+            )
+            session.merge(post)
+        
+        session.commit()
+        return {"status_code": 200, "message": "Database imported successfully"}
+    except Exception as e:
+        print(e)
+        return {"status_code": 500, "message": f"Error during database import: {e}"}
+
+def pgExportDB(username,secret_key):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            export_data = export_to_json(session)
+            return export_data
+        else:
+            return {"status_code": 403, "message": "Forbidden"}
+    else:
+        return {"status_code": 404, "message": "User not found"}
+
+def reset_all_sequences():
+    """Reset all auto-increment sequences after database import"""
+    
+    sequences = [
+        "SELECT setval('images_id_seq', (SELECT MAX(id) FROM images));",
+        "SELECT setval('events_id_seq', (SELECT MAX(id) FROM events));", 
+        "SELECT setval('posts_id_seq', (SELECT MAX(id) FROM posts));"
+    ]
+    
+    for seq_query in sequences:
+        try:
+            result = session.execute(text(seq_query))
+            new_val = result.scalar()  # Get the returned value
+            table_name = seq_query.split("'")[1].replace('_id_seq', '')
+            print(f"Reset {table_name} sequence to: {new_val}")
+        except Exception as e:
+            print(f"Error resetting sequence: {seq_query} - {e}")
+    
+    session.commit()
+
+def pgImportDB(username,secret_key,import_data,clear_existing=False):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if user.secret_key == secret_key and "admin" in user.roles:
+            if import_from_json(import_data,clear_existing)['status_code'] == 200:
+                reset_all_sequences()
+                return {"status_code": 200, "message": "Database imported successfully"}
+            else:
+                return {"status_code": 500, "message": "Error during database import"}
+        else:
+            return {"status_code": 403, "message": "Forbidden"}
+    else:
+        return {"status_code": 404, "message": "User not found"}
+
 if __name__ == "__main__":
     resetdb()
-    pgCreateUser(admin_username,admin_password,["admin"],"admin@nitc.ac.in")
+    pgCreateUser(admin_username,admin_password,["admin"],admin_email)

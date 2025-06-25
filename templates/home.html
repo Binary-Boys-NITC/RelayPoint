@@ -28,6 +28,9 @@
         border-radius: 10px;
         margin: 10px;
       }
+      .card {
+        height: 100%;
+      }
       .carousel-item img{
         object-fit: contain;
         aspect-ratio: 16/9;
@@ -40,7 +43,7 @@
 </head>
 <body data-bs-theme="dark">
     {% include 'navbar.html' %}
-    <div class="cotainer-fluid">
+    <div class="container-fluid">
       <div class="row">
         <div class="col-lg-8">
           <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
@@ -70,7 +73,7 @@
             </button>
           </div>
         </div>
-        <div class="col-lg-4 px-3 py-3">
+        <div class="col-lg-4 px-3 py-3 align-content-center">
           <div class="col-lg-12 text-center">
             <h1>RelayPoint - Event Management System of NITC</h1>
             <p>This centralized event management platform is designed to streamline the organization and participation of events within the NIT Calicut campus. From technical symposiums and cultural festivals to workshops and guest lectures, the system brings all campus events under one unified interface.</p>
