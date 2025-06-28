@@ -153,6 +153,29 @@ def signup():
     else:
         return render_template('signup.html',username="Guest User",profile_link='/login')
 
+@app.route('/verify',methods=["GET"])
+def verify():
+    token=request.args.get('token')
+    username=request.args.get('username')
+    if token:
+        resp = pg.pgVerifyEmail(username,token)
+        if resp['status_code']==200:
+            return render_template('verify.html',username=username or "Guest User",profile_link='/myprofile',message="Email verified successfully")
+        else:
+            return render_template('verify.html',username=username or "Guest User",profile_link='/myprofile',message=resp['message'])
+    else:
+        return render_template('verify.html',username=username or "Guest User",profile_link='/myprofile',message="No token provided")
+
+@app.route('/resend_verification',methods=["GET"])
+def resend_verification():
+    username=request.cookies.get('username')
+    resp = pg.pgResendVerification(username)
+    if resp['status_code']==200:
+        return render_template('verify.html',username=username,profile_link='/myprofile',message="Verification email sent. Please check your email.")
+    else:
+        return render_template('verify.html',username=username,profile_link='/myprofile',message="Failed to send verification email")
+
+
 @app.route('/api/login',methods=["POST"])
 def apiLogin():
     resp = pg.pgLogin(request.form['username'],request.form['password'])
@@ -258,7 +281,8 @@ def myprofile():
                            profile_url='/myprofile',
                            workshop_count=len(recent_events_ids),
                            points=points,rank=pg.pgGetRank(username),
-                           recent_events=recent_events)
+                           recent_events=recent_events,
+                           verified=pg.pgUserFetch(username)['data']['verified'])
 @app.route('/leaderboard',methods=["GET"])
 def leaderboard():
     username = request.cookies.get('username')
@@ -389,6 +413,8 @@ def event(id):
 def register(id):
     username=request.cookies.get('username')
     secret_key=request.cookies.get('secret_key')
+    if not(pg.pgIsVerified(username)):
+        return redirect('/resend_verification')
     if username!=None:
         if not pg.pgUserAuth(username,secret_key):
             response = make_response(redirect('/register/'+str(id)))

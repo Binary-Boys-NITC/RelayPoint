@@ -12,6 +12,7 @@ from PIL import Image as PILImage
 import io
 import json
 from datetime import datetime
+import verify
 
 def binary_to_base64(binary_data, mime_type):
     # Encode binary data to Base64
@@ -28,6 +29,7 @@ hash_key=os.getenv("HASH_KEY")
 admin_username=os.getenv("ADMIN_USERNAME")
 admin_password=os.getenv("ADMIN_PASSWORD")
 admin_email=os.getenv("ADMIN_EMAIL")
+relay_point_url=os.getenv("RELAY_POINT_URL")
 
 def hasher(password: str) -> str:
     """
@@ -58,6 +60,7 @@ class User(Base):
     roles = Column(MutableList.as_mutable(ARRAY(String)))
     secret_key = Column(String, nullable=True)
     email = Column(String, nullable=True)
+    verified = Column(Boolean, default=False)
 class UserStats(Base):
     __tablename__ = 'user_stats'
     username = Column(String, ForeignKey('users.username'), primary_key=True)
@@ -110,13 +113,38 @@ def pgCreateUser(username:str,password:str,roles:list,email:str):
             user_stats = UserStats(username=username, events_ids=[], created_events_ids=[], points=[])
             session.add(user_stats)
             session.commit()
+            verify.send_email(email,"Verify your email","Click the link to verify your email: "+relay_point_url+"/verify?token="+hasher(email+username))
             return {"status_code":200,"message":"Ok"}
         else:
             return {"status_code":409,"message":f"Email \'{email}\' already exists."}
     else:
         return {"status_code":409,"message":f"Username \'{username}\' already exists."}
 
+def pgVerifyEmail(username:str,token:str):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if hasher(user.email+username) == token:
+            user.verified = True
+            session.commit()
+            return {"status_code":200,"message":"Ok"}
+        else:
+            return {"status_code":401,"message":"Invalid token"}
+    else:
+        return {"status_code":404,"message":"User not found"}
 
+def pgResendVerification(username:str):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        verify.send_email(user.email,"Verify your email","Click the link to verify your email: "+relay_point_url+"/verify?username="+user.username+"&token="+hasher(user.email+user.username))
+        return {"status_code":200,"message":"Ok"}
+    else:
+        return {"status_code":404,"message":"User not found"}
+def pgIsVerified(username:str):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        return user.verified
+    else:
+        return False
 def pgLogin(username:str,password:str):
     user = session.query(User).filter(User.username == username).first()
     if user is not None:
@@ -146,7 +174,7 @@ def pgLogout(username:str,secret_key:str):
 def pgUserFetch(username:str):
     user = session.query(User).filter(User.username == username).first()
     if user is not None:
-        return {"status_code":200,"message":"Ok","data":{"username":username,"roles":user.roles,"email":user.email}}
+        return {"status_code":200,"message":"Ok","data":{"username":username,"roles":user.roles,"email":user.email,"verified":user.verified}}
     else:
         return {"status_code":404,"message":"User not found"}
 
@@ -424,7 +452,7 @@ def pgGetParticipants(eventId:int):
     users={"participants":[]}
     for user in registered_users:
         user_data=session.query(User).filter(User.username==user).first()
-        users["participants"].append({"username":user_data.username,"email":user_data.email})
+        users["participants"].append({"username":user_data.username,"email":user_data.email,"verified":user_data.verified})
     return users
 
 def pgMakeOrganizer(organizer,username,secret_key):
