@@ -144,7 +144,10 @@ def login():
     if request.cookies.get("secret_key")!=None:
         return redirect('/')
     else:
-        return render_template('login.html',username="Guest User",profile_link='/login')
+        if request.args.get('message'):
+             return render_template('login.html',username="Guest User",profile_link='/login',message=request.args.get('message'))
+        else:
+            return render_template('login.html',username="Guest User",profile_link='/login')
 
 @app.route('/signup',methods=["GET"])
 def signup():
@@ -175,6 +178,29 @@ def resend_verification():
     else:
         return render_template('verify.html',username=username,profile_link='/myprofile',message="Failed to send verification email")
 
+@app.route('/change_username_password',methods=["GET","POST"])
+def change_username_password():
+    if request.method=="POST":
+        email=request.form.get('email')
+        resp = pg.pgChangeUsernamePassword(email)
+        if resp['status_code']==200:
+            return render_template('login.html',username="Guest User",profile_link='/login',message="Username/password reset link sent. Please check your email.")
+        else:
+            return render_template('login.html',username="Guest User",profile_link='/login',message="Failed to send username/password reset link")
+    else:
+        if request.args.get('token'):
+            token=request.args.get('token')
+            email=request.args.get('email')
+            return render_template('reset_account.html',username="Guest User",profile_link='/login',token=token,email=email)
+        return render_template('reset_account.html',username="Guest User",profile_link='/login')
+
+@app.route('/api/change_username_password',methods=["POST"])
+def apiChangeUsernamePassword():
+    resp = pg.pgResetUsernamePassword(request.form['username'],request.form['password'],request.form['token'],request.form['email'])
+    if resp['status_code']==200:
+        return render_template('login.html',username="Guest User",profile_link='/login',message="Username/password reset successfully")
+    else:
+        return render_template('login.html',username="Guest User",profile_link='/login',message=resp['message'])
 
 @app.route('/api/login',methods=["POST"])
 def apiLogin():
@@ -196,7 +222,7 @@ def apiSignup():
         return render_template('signup.html',username="Guest User",profile_link='/login',message="Invalid email")
     resp = pg.pgCreateUser(request.form['username'],request.form['password'],['student'],request.form['email'])
     if resp['status_code']==200:
-        return redirect('/login')
+        return redirect('/login?message=Check your email for verification')
     else:
         return render_template('signup.html',username="Guest User",profile_link='/login',message=resp['message'])
 
@@ -278,6 +304,7 @@ def myprofile():
     
     return render_template('/profile.html',
                            username=username,
+                           email=pg.pgUserFetch(username)['data']['email'],
                            profile_url='/myprofile',
                            workshop_count=len(recent_events_ids),
                            points=points,rank=pg.pgGetRank(username),
