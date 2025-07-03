@@ -25,27 +25,37 @@
   {% include 'navbar.html' %}
 
     <div class="container-fluid d-flex justify-content-center mt-5">
-        <h1>Login</h1>
+        <h1>Reset Account</h1>
     </div>
 
     <div class="d-flex justify-content-center">
     <div class="container-fluid mt-5" style="max-width: 400px; height: 400px;">
-      <form class="login-form" action="/api/login" method="POST">
-        <h5>Username</h5>
-        <input type="text" placeholder="Username" class="form-control mb-3" name="username"/>
-        
-        <h5>Password</h5>
-        <input type="password" placeholder="Password" class="form-control mb-3" name="password"/>
+        {% if token is not defined %}
+      <form class="reset-form" action="/change_username_password" method="POST">
+        <h5>Email</h5>
+        <input type="text" placeholder="Email" class="form-control mb-3" name="email"/>
         {% if message is defined %}
         <div class="alert alert-danger" role="alert">
             {{message}}
         </div>
         {% endif %}
-        <button type="submit" class="btn btn-primary">Login</button>
+        <button type="submit" class="btn btn-primary">Reset</button>
         </form>
+        {% else %}
+        <form class="reset-form" action="/api/change_username_password" method="POST">
+            <h5>Username</h5>
+            <input type="text" placeholder="Username" class="form-control mb-3" name="username"/>
+            <h5>Password</h5>
+            <input type="password" placeholder="Password" class="form-control mb-3" name="password"/>
+            <h5>Confirm Password</h5>
+            <input type="password" placeholder="Confirm Password" class="form-control mb-3" name="confirm_password"/>
+            <input type="hidden" name="token" value="{{token}}"/>
+            <input type="hidden" name="email" value="{{email}}"/>
+            <button type="submit" class="btn btn-primary">Reset</button>
+        </form>
+        {% endif %}
     <div class="mt-4 extra">
-      <a href="/signup" class="d-block text-decoration-none " style="font-weight: 500;">New User?</a>
-      <a href="/change_username_password" class="d-block text-decoration-none " style="font-weight: 500;">Forgot Username/Password?</a>
+      <a href="/login" class="d-block text-decoration-none " style="font-weight: 500;">Back to login</a>
     </div>
 
     </div>

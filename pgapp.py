@@ -4,6 +4,7 @@ import dotenv,os
 import random
 import base64
 import datetime
+import traceback
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import sessionmaker
@@ -12,6 +13,7 @@ from PIL import Image as PILImage
 import io
 import json
 from datetime import datetime
+import verify
 
 def binary_to_base64(binary_data, mime_type):
     # Encode binary data to Base64
@@ -28,6 +30,7 @@ hash_key=os.getenv("HASH_KEY")
 admin_username=os.getenv("ADMIN_USERNAME")
 admin_password=os.getenv("ADMIN_PASSWORD")
 admin_email=os.getenv("ADMIN_EMAIL")
+relay_point_url=os.getenv("RELAY_POINT_URL")
 
 def hasher(password: str) -> str:
     """
@@ -58,6 +61,8 @@ class User(Base):
     roles = Column(MutableList.as_mutable(ARRAY(String)))
     secret_key = Column(String, nullable=True)
     email = Column(String, nullable=True)
+    verified = Column(Boolean, default=False)
+    
 class UserStats(Base):
     __tablename__ = 'user_stats'
     username = Column(String, ForeignKey('users.username'), primary_key=True)
@@ -110,13 +115,60 @@ def pgCreateUser(username:str,password:str,roles:list,email:str):
             user_stats = UserStats(username=username, events_ids=[], created_events_ids=[], points=[])
             session.add(user_stats)
             session.commit()
+            verify.send_email(email,"Verify your email","Click the link to verify your email: "+relay_point_url+"/verify?token="+hasher(email+hash_key))
             return {"status_code":200,"message":"Ok"}
         else:
             return {"status_code":409,"message":f"Email \'{email}\' already exists."}
     else:
         return {"status_code":409,"message":f"Username \'{username}\' already exists."}
 
+def pgVerifyEmail(username:str,token:str):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        if hasher(user.email+hash_key) == token:
+            user.verified = True
+            session.commit()
+            return {"status_code":200,"message":"Ok"}
+        else:
+            return {"status_code":401,"message":"Invalid token"}
+    else:
+        return {"status_code":404,"message":"User not found"}
 
+def pgResendVerification(username:str):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        verify.send_email(user.email,"Verify your email","Click the link to verify your email: "+relay_point_url+"/verify?username="+user.username+"&token="+hasher(user.email+hash_key))
+        return {"status_code":200,"message":"Ok"}
+    else:
+        return {"status_code":404,"message":"User not found"}
+
+def pgChangeUsernamePassword(email:str):
+    user = session.query(User).filter(User.email == email).first()
+    if user is not None:
+        verify.send_email(email,"Change your username/password","Click the link to change your username/password: "+relay_point_url+"/change_username_password?email="+email+"&token="+hasher(email+hash_key))
+        return {"status_code":200,"message":"Ok"}
+    else:
+        return {"status_code":404,"message":"User not found"}
+    
+def pgResetUsernamePassword(username:str,password:str,token:str,email:str):
+    user = session.query(User).filter(User.email == email).first()
+    if user is not None:
+        if hasher(user.email+hash_key) == token:
+            user.username = username
+            user.hashed_password = hasher(password)
+            session.commit()
+            return {"status_code":200,"message":"Ok"}
+        else:
+            return {"status_code":401,"message":"Invalid token"}
+    else:
+        return {"status_code":404,"message":"User not found"}
+        
+def pgIsVerified(username:str):
+    user = session.query(User).filter(User.username == username).first()
+    if user is not None:
+        return user.verified
+    else:
+        return False
 def pgLogin(username:str,password:str):
     user = session.query(User).filter(User.username == username).first()
     if user is not None:
@@ -146,7 +198,7 @@ def pgLogout(username:str,secret_key:str):
 def pgUserFetch(username:str):
     user = session.query(User).filter(User.username == username).first()
     if user is not None:
-        return {"status_code":200,"message":"Ok","data":{"username":username,"roles":user.roles,"email":user.email}}
+        return {"status_code":200,"message":"Ok","data":{"username":username,"roles":user.roles,"email":user.email,"verified":user.verified}}
     else:
         return {"status_code":404,"message":"User not found"}
 
@@ -424,7 +476,7 @@ def pgGetParticipants(eventId:int):
     users={"participants":[]}
     for user in registered_users:
         user_data=session.query(User).filter(User.username==user).first()
-        users["participants"].append({"username":user_data.username,"email":user_data.email})
+        users["participants"].append({"username":user_data.username,"email":user_data.email,"verified":user_data.verified})
     return users
 
 def pgMakeOrganizer(organizer,username,secret_key):
@@ -554,8 +606,12 @@ def pgAdminResetDB(username,secret_key):
             reset_session.close()
             
     except Exception as e:
-        print(f"Error during safe database reset: {e}")
-        return {"status_code": 500, "message": f"Database reset failed: {str(e)}"}
+        print(f"Full error details:")
+        print(f"Exception type: {type(e).__name__}")
+        print(f"Exception message: {str(e)}")
+        print(f"Full traceback:")
+        traceback.print_exc()
+        return {"status_code": 500, "message": f"Error during safe database reset: {e}"}
 
 def reinitialize_session():
     """
@@ -595,7 +651,8 @@ def export_to_json(session):
             'hashed_password': user.hashed_password,
             'roles': user.roles,
             'secret_key': user.secret_key,
-            'email': user.email
+            'email': user.email,
+            'verified': user.verified
         })
     
     # Export UserStats
@@ -691,7 +748,8 @@ def import_from_json(import_data, clear_existing=False):
                 hashed_password=user_data['hashed_password'],
                 roles=user_data['roles'],
                 secret_key=user_data['secret_key'],
-                email=user_data['email']
+                email=user_data['email'],
+                verified=False if 'verified' not in user_data else user_data['verified']
             )
             session.merge(user)  # Use merge to handle duplicates
         
@@ -717,7 +775,8 @@ def import_from_json(import_data, clear_existing=False):
                 organizers=event_data['organizers'],
                 access=event_data['access'],
                 registered_users=event_data['registered_users'],
-                registration_link=event_data['registration_link']
+                registration_link=event_data['registration_link'],
+                whatsapp_sent=event_data['whatsapp_sent']
             )
             session.merge(event)
         
@@ -754,7 +813,11 @@ def import_from_json(import_data, clear_existing=False):
         session.commit()
         return {"status_code": 200, "message": "Database imported successfully"}
     except Exception as e:
-        print(e)
+        print(f"Full error details:")
+        print(f"Exception type: {type(e).__name__}")
+        print(f"Exception message: {str(e)}")
+        print(f"Full traceback:")
+        traceback.print_exc()
         return {"status_code": 500, "message": f"Error during database import: {e}"}
 
 def pgExportDB(username,secret_key):
