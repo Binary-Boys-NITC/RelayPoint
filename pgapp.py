@@ -115,7 +115,7 @@ def pgCreateUser(username:str,password:str,roles:list,email:str):
             user_stats = UserStats(username=username, events_ids=[], created_events_ids=[], points=[])
             session.add(user_stats)
             session.commit()
-            verify.send_email(email,"Verify your email","Click the link to verify your email: "+relay_point_url+"/verify?token="+hasher(email+hash_key))
+            verify.send_email(email,"Verify your email","Click the link to verify your email: "+relay_point_url+"/verify?username="+username+"&token="+hasher(email+hash_key))
             return {"status_code":200,"message":"Ok"}
         else:
             return {"status_code":409,"message":f"Email \'{email}\' already exists."}
