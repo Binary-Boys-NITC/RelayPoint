@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, Boolean, text
+from sqlalchemy.pool import QueuePool
 from PIL import Image as PILImage
 import io
 import json
@@ -97,10 +98,18 @@ class Post(Base):
     blog = Column(String)
     date = Column(DateTime)
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-engine = create_engine(database_url)
+engine = create_engine(
+    database_url,
+    poolclass=QueuePool,
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True,        # This validates connections before use
+    pool_recycle=300,          # Recycle connections every 5 minutes
+    connect_args={
+        "connect_timeout": 10,
+        "application_name": "your_app_name"
+    }
+)
 Session = sessionmaker(bind=engine)
 session = Session()
 
