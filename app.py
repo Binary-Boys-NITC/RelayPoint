@@ -9,6 +9,8 @@ import pgapp as pg
 import os
 from urllib.parse import quote
 from datetime import timedelta
+from icalendar import Calendar, Event
+import pytz
 
 app = Flask(__name__)
 
@@ -41,35 +43,43 @@ def generate_qr(username, event_id, email):
         return f"Error generating QR code: {str(e)}"
 
 def generate_ical(event):
-    # Format datetime for IST timezone
-    def format_datetime_ist(dt):
-        return dt.strftime('%Y%m%dT%H%M%S')
+    # Create a calendar
+    cal = Calendar()
+    cal.add('prodid', '-//BinaryBoys//RelayPoint//EN')
+    cal.add('version', '2.0')
+    cal.add('calscale', 'GREGORIAN')
+    cal.add('method', 'PUBLISH')
     
-    url_encoded = f"""data:text/calendar;charset=utf8,BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//BinaryBoys//RelayPoint//EN
-CALSCALE:GREGORIAN
-METHOD:PUBLISH
-BEGIN:VTIMEZONE
-TZID:Asia/Kolkata
-BEGIN:STANDARD
-DTSTART:19700101T000000
-TZNAME:IST
-TZOFFSETFROM:+0530
-TZOFFSETTO:+0530
-END:STANDARD
-END:VTIMEZONE
-BEGIN:VEVENT
-UID:{quote(str(event.id)) + quote("@relaypoint.nitc.ac.in")}
-DTSTART;TZID=Asia/Kolkata:{format_datetime_ist(event.date)}
-DTEND;TZID=Asia/Kolkata:{format_datetime_ist(event.date + timedelta(hours=1))}
-DTSTAMP:{datetime.now().strftime('%Y%m%dT%H%M%SZ')}
-SUMMARY:{quote(event.title)}
-DESCRIPTION:{quote(event.description.replace(",", "\\,"))}
-STATUS:CONFIRMED
-TRANSP:OPAQUE
-END:VEVENT
-END:VCALENDAR""".replace("\n", "%0A")
+    # Create an event
+    cal_event = Event()
+    cal_event.add('uid', f"{event.id}@relaypoint.nitc.ac.in")
+    cal_event.add('summary', event.title)
+    cal_event.add('description', event.description)
+    cal_event.add('status', 'CONFIRMED')
+    cal_event.add('transp', 'OPAQUE')
+    
+    # Set timezone to IST
+    ist = pytz.timezone('Asia/Kolkata')
+    
+    # Convert event date to IST timezone
+    if event.date.tzinfo is None:
+        # If date is naive, assume it's in IST
+        event_date = ist.localize(event.date)
+    else:
+        # If date has timezone info, convert to IST
+        event_date = event.date.astimezone(ist)
+    
+    # Set start and end times
+    cal_event.add('dtstart', event_date)
+    cal_event.add('dtend', event_date + timedelta(hours=1))
+    cal_event.add('dtstamp', datetime.now(ist))
+    
+    # Add the event to the calendar
+    cal.add_component(cal_event)
+    
+    # Convert to string and URL encode
+    ical_string = cal.to_ical().decode('utf-8')
+    url_encoded = f"data:text/calendar;charset=utf8,{quote(ical_string)}"
     
     return url_encoded
     
@@ -607,4 +617,4 @@ def page_not_found(e):
     return render_template('notfound.html')
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=os.environ.get('PORT',10000),debug=True)
+    app.run(host='0.0.0.0',port=os.environ.get('PORT',10000))
